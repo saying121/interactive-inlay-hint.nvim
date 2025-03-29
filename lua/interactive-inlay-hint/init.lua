@@ -7,13 +7,13 @@ local M = {}
 M.inlay_tooltip_at_range = function(range)
 	local hint_list = vim.lsp.inlay_hint.get({ bufnr = 0, range = range })
 
+	if #hint_list < 1 then
+		return
+	end
+
 	local labels = {}
 	for _, value in ipairs(hint_list) do
 		table.insert(labels, utils.full_label(value.inlay_hint.label))
-	end
-
-	if #hint_list < 1 then
-		return
 	end
 
 	if #hint_list == 1 then

@@ -3,8 +3,6 @@ local ui = require("interactive-inlay-hint.ui")
 
 local M = {}
 
-local methods = vim.lsp.protocol.Methods
-
 --- @param range lsp.Range
 M.inlay_tooltip_at_range = function(range)
 	local hint_list = vim.lsp.inlay_hint.get({ bufnr = 0, range = range })
@@ -23,7 +21,7 @@ M.inlay_tooltip_at_range = function(range)
 		return
 	end
 
-	vim.ui.select(labels, { prompt = "Select label" }, function(item, idx)
+	vim.ui.select(labels, { prompt = "Select label" }, function(_, idx)
 		local hint = hint_list[idx]
 		vim.print(hint)
 

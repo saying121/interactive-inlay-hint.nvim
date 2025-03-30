@@ -63,12 +63,13 @@ M.hover = function(result, super_win)
 
     utils.set_win_buf_opt(hover_state.winnr, hover_state.bufnr)
 
-    keymap("n", "q", function()
+    local function quit_win()
         hover_state:close_hover()
-    end, { buffer = hover_state.bufnr, silent = true })
-    keymap("n", "<Esc>", function()
-        hover_state:close_hover()
-    end, { buffer = hover_state.bufnr, silent = true })
+        api.nvim_set_current_win(super_win)
+    end
+
+    keymap("n", "q", quit_win, { buffer = hover_state.bufnr, silent = true })
+    keymap("n", "<Esc>", quit_win, { buffer = hover_state.bufnr, silent = true })
 end
 
 return M

@@ -23,7 +23,6 @@ local inlay_list_state = {
     ---@type string[][]
     label_text_datas = {},
     labels_width = 0,
-    ---@type (string|lsp.InlayHintLabelPart)[]
     ---@type LabelData[]
     label_raw_datas = {},
 
@@ -59,11 +58,15 @@ function inlay_list_state:keymaps(cur_data, part)
     end, { buffer = self.bufnr })
 
     keymap(config.keymaps.hover[1], config.keymaps.hover[2], function()
+        if handler.hover_state.winnr ~= nil then
+            api.nvim_set_current_win(handler.hover_state.winnr)
+            return
+        end
         client:request(methods.textDocument_hover, {
             textDocument = { uri = part.location.uri },
             position = part.location.range.start,
         }, function(_, result, _)
-            handler.hover(result)
+            handler.hover(result, self.winnr)
         end)
         -- self:close_hover()
     end, { buffer = self.bufnr })
@@ -139,7 +142,7 @@ function inlay_list_state:init(hint_list)
         row = 1,
         col = -1,
     })
-    api.nvim_create_autocmd({ "WinClosed", "WinLeave" }, {
+    api.nvim_create_autocmd({ "WinClosed" }, {
         buffer = self.bufnr,
         callback = function(_)
             tooltip:close_hover()

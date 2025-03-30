@@ -1,6 +1,7 @@
 local api = vim.api
 local keymap = vim.keymap.set
 local utils = require("interactive-inlay-hint.utils")
+local config = require("interactive-inlay-hint.config")
 
 local M = {
     ---@type integer
@@ -13,10 +14,14 @@ local M = {
 ---@param super_win integer
 function M:init(markdown_lines, super_win)
     self.bufnr = api.nvim_create_buf(false, true)
-    self.winnr = api.nvim_open_win(self.bufnr, false, {
+
+    local width = utils.max_width(markdown_lines)
+    local height = #markdown_lines
+
+    local win_opts = vim.tbl_extend("keep", config.values.win_opts, {
         win = super_win,
-        width = utils.max_width(markdown_lines),
-        height = #markdown_lines,
+        -- width = utils.max_width(markdown_lines),
+        -- height = #markdown_lines,
         border = "rounded",
         relative = "win",
         row = 1,
@@ -24,6 +29,9 @@ function M:init(markdown_lines, super_win)
         title = "tooltip",
         title_pos = "center",
     })
+    utils.min_width_height(win_opts, width, height)
+
+    self.winnr = api.nvim_open_win(self.bufnr, false, win_opts)
 
     api.nvim_buf_set_lines(self.bufnr, 0, #markdown_lines, false, markdown_lines)
 

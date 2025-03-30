@@ -71,4 +71,11 @@ M.set_win_buf_opt = function(winnr, bufnr)
     vim.bo[bufnr].ft = "markdown"
 end
 
+---@param width integer
+---@param height integer
+M.min_width_height = function(win_opts, width, height)
+    win_opts.width = math.min(win_opts.width, width)
+    win_opts.height = math.min(win_opts.height, height)
+end
+
 return M

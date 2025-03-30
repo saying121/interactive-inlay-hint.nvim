@@ -4,6 +4,7 @@ local log = vim.lsp.log
 local api = vim.api
 local keymap = vim.keymap.set
 local utils = require("interactive-inlay-hint.utils")
+local config = require("interactive-inlay-hint.config")
 
 local hover_state = {
     ---@type integer
@@ -47,10 +48,15 @@ M.hover = function(result, super_win)
     end
     local markdown_lines = lsp_util.convert_input_to_markdown_lines(result.contents, {})
     hover_state.bufnr = api.nvim_create_buf(false, true)
-    hover_state.winnr = api.nvim_open_win(hover_state.bufnr, false, {
+
+    local width = utils.max_width(markdown_lines)
+    local height = #markdown_lines
+
+    ---@type vim.api.keyset.win_config
+    local win_opts = vim.tbl_extend("keep", config.values.win_opts, {
         win = super_win,
-        width = utils.max_width(markdown_lines),
-        height = #markdown_lines,
+        -- width = utils.max_width(markdown_lines),
+        -- height = #markdown_lines,
         border = "rounded",
         relative = "win",
         row = 1,
@@ -58,6 +64,9 @@ M.hover = function(result, super_win)
         title = "tooltip",
         title_pos = "center",
     })
+    utils.min_width_height(win_opts, width, height)
+
+    hover_state.winnr = api.nvim_open_win(hover_state.bufnr, false, win_opts)
 
     api.nvim_buf_set_lines(hover_state.bufnr, 0, #markdown_lines, false, markdown_lines)
 

@@ -1,5 +1,6 @@
 local utils = require("interactive-inlay-hint.utils")
 local ui = require("interactive-inlay-hint.ui")
+local config = require("interactive-inlay-hint.config")
 
 local M = {}
 
@@ -9,7 +10,11 @@ M.inlay_tooltip_at_range = function(range)
     ui.float_ui(hint_list)
 end
 
-M.inlay_tooltip_at_cursor_word = function()
+M.setup = function(opts)
+    config.setup(opts)
+end
+
+M.inlay_tooltip_at_cursor = function()
     M.inlay_tooltip_at_range(utils.select_word())
 end
 

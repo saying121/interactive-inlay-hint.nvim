@@ -6,6 +6,7 @@ local keymap = vim.keymap.set
 local utils = require("interactive-inlay-hint.utils")
 local tooltip = require("interactive-inlay-hint.tooltip")
 local handler = require("interactive-inlay-hint.lsp_handler")
+local config = require("interactive-inlay-hint.config")
 
 local M = {}
 
@@ -31,13 +32,7 @@ local inlay_list_state = {
     ns_id = nil,
     ---@type integer
     extmark_id = nil,
-    ref_hi = "LspReferenceText",
-}
-local config = {
-    keymaps = {
-        goto_def = { "n", "gd" },
-        hover = { "n", "K" },
-    },
+    ref_hi = config.values.hover_hi,
 }
 
 ---@param cur_data LabelData
@@ -49,7 +44,7 @@ function inlay_list_state:keymaps(cur_data, part)
         method = methods.textDocument_inlayHint,
     })[1]
 
-    keymap(config.keymaps.goto_def[1], config.keymaps.goto_def[2], function()
+    keymap(config.values.keymaps.goto_def[1], config.values.keymaps.goto_def[2], function()
         client:request(methods.textDocument_definition, {
             textDocument = { uri = part.location.uri },
             position = part.location.range.start,
@@ -57,7 +52,7 @@ function inlay_list_state:keymaps(cur_data, part)
         self:close_hover()
     end, { buffer = self.bufnr })
 
-    keymap(config.keymaps.hover[1], config.keymaps.hover[2], function()
+    keymap(config.values.keymaps.hover[1], config.values.keymaps.hover[2], function()
         if handler.hover_state.winnr ~= nil then
             api.nvim_set_current_win(handler.hover_state.winnr)
             return
@@ -68,12 +63,11 @@ function inlay_list_state:keymaps(cur_data, part)
         }, function(_, result, _)
             handler.hover(result, self.winnr)
         end)
-        -- self:close_hover()
     end, { buffer = self.bufnr })
 end
 
 function inlay_list_state:handle_part()
-    for _, value in pairs(config.keymaps) do
+    for _, value in pairs(config.values.keymaps) do
         -- Del old keymap.
         -- Make sure keymap only in the part that have location
         pcall(vim.keymap.del, value[1], value[2], { buffer = self.bufnr })
@@ -134,14 +128,21 @@ function inlay_list_state:init(hint_list)
             end
         end
     end
-    self.winnr = api.nvim_open_win(self.bufnr, true, {
+
+    local width = self.labels_width
+    local height = 1
+    ---@type vim.api.keyset.win_config
+    local win_opts = vim.tbl_extend("keep", config.values.win_opts, {
         border = "rounded",
         relative = "cursor",
-        width = self.labels_width,
-        height = 1,
+        -- width = self.labels_width,
+        -- height = 1,
         row = 1,
         col = -1,
     })
+    utils.min_width_height(win_opts, width, height)
+
+    self.winnr = api.nvim_open_win(self.bufnr, true, win_opts)
     api.nvim_create_autocmd({ "WinClosed" }, {
         buffer = self.bufnr,
         callback = function(_)

@@ -19,6 +19,8 @@ function M:init(markdown_lines)
         relative = "cursor",
         row = 1,
         col = -1,
+        title = "tooltip",
+        title_pos = "center",
     })
 
     api.nvim_buf_set_lines(self.bufnr, 0, #markdown_lines, false, markdown_lines)

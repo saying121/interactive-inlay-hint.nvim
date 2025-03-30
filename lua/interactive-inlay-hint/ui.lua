@@ -5,6 +5,7 @@ local lsp_util = lsp.util
 local keymap = vim.keymap.set
 local utils = require("interactive-inlay-hint.utils")
 local tooltip = require("interactive-inlay-hint.tooltip")
+local handler = require("interactive-inlay-hint.lsp_handler")
 
 local M = {}
 
@@ -20,16 +21,6 @@ local function lsp_handler(_, inlay_hint, ctx)
         return
     end
 
-    -- ---@type lsp.InlayHintLabelPart[]
-    -- local location_parts = vim.tbl_filter(
-    --     ---@param part lsp.InlayHintLabelPart
-    --     function(part)
-    --         return part.location ~= nil
-    --     end,
-    --     label
-    -- )
-    --
-    -- local part = location_parts[1]
     -- if part then
     --     client:request(methods.textDocument_hover, {
     --         textDocument = { uri = part.location.uri },
@@ -41,6 +32,11 @@ local function lsp_handler(_, inlay_hint, ctx)
     -- end
 end
 
+---@class LabelData
+---@field bufnr integer
+---@field client_id integer
+---@field part string|lsp.InlayHintLabelPart
+
 local inlay_list_state = {
     ---@type integer
     winnr = nil,
@@ -51,6 +47,7 @@ local inlay_list_state = {
     label_text_datas = {},
     labels_width = 0,
     ---@type (string|lsp.InlayHintLabelPart)[]
+    ---@type LabelData[]
     label_raw_datas = {},
 
     cur_inlay_idx = 0,
@@ -62,7 +59,8 @@ local inlay_list_state = {
 }
 
 function inlay_list_state:handle_part()
-    local part = self:cur_part()
+    local cur_data = self:cur_data()
+    local part = cur_data.part
 
     ---@type string|lsp.MarkupContent
     local input
@@ -70,6 +68,37 @@ function inlay_list_state:handle_part()
         input = part
     else
         input = part.tooltip
+
+        if part.location ~= nil then
+            local client = lsp.get_clients({
+                bufnr = cur_data.bufnr,
+                client_id = cur_data.client_id,
+                method = methods.textDocument_inlayHint,
+            })[1]
+
+            keymap("n", "gd", function()
+                client:request(methods.textDocument_definition, {
+                    textDocument = { uri = part.location.uri },
+                    position = part.location.range.start,
+                }, function(_, result, ctx)
+                    handler.goto_definition(_, result, ctx)
+                end)
+                self:close_hover()
+            end, { buffer = self.bufnr })
+
+            keymap("n", "K", function()
+                client:request(
+                    methods.textDocument_hover,
+                    {
+                        textDocument = { uri = part.location.uri },
+                        position = part.location.range.start,
+                    }
+                    -- , function(_, result, _)
+                    -- end
+                )
+                -- self:close_hover()
+            end, { buffer = self.bufnr })
+        end
     end
 
     if input == nil then
@@ -91,12 +120,24 @@ function inlay_list_state:init(hint_list)
         if type(label) == "string" then
             self.labels_width = self.labels_width + #label
             table.insert(self.label_text_datas, { label })
-            table.insert(self.label_raw_datas, label)
+            ---@type LabelData
+            local lbdt = {
+                bufnr = value.bufnr,
+                client_id = value.client_id,
+                part = label,
+            }
+            table.insert(self.label_raw_datas, lbdt)
         else
             for _, part in ipairs(label) do
                 self.labels_width = self.labels_width + #part.value
                 table.insert(self.label_text_datas, { part.value })
-                table.insert(self.label_raw_datas, part)
+                ---@type LabelData
+                local lbdt = {
+                    bufnr = value.bufnr,
+                    client_id = value.client_id,
+                    part = part,
+                }
+                table.insert(self.label_raw_datas, lbdt)
             end
         end
     end
@@ -130,8 +171,8 @@ function inlay_list_state:close_hover()
     tooltip:close_hover()
 end
 
----@return lsp.InlayHintLabelPart|string
-function inlay_list_state:cur_part()
+---@return LabelData
+function inlay_list_state:cur_data()
     return self.label_raw_datas[self.cur_inlay_idx]
 end
 

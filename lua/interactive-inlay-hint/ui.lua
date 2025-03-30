@@ -7,7 +7,12 @@ local utils = require("interactive-inlay-hint.utils")
 
 local M = {}
 
-local auto_focus = true
+local function set_win_buf_opt(winnr, bufnr)
+    vim.wo[winnr].signcolumn = "no"
+    vim.wo[winnr].number = false
+    vim.wo[winnr].rnu = false
+    vim.bo[bufnr].ft = "markdown"
+end
 
 local tooltip = {
     ---@type integer
@@ -15,6 +20,31 @@ local tooltip = {
     ---@type integer
     bufnr = nil,
 }
+
+---@param markdown_lines string[]
+function tooltip:init(markdown_lines)
+    self.bufnr = api.nvim_create_buf(false, true)
+    self.winnr = api.nvim_open_win(self.bufnr, false, {
+        width = utils.max_width(markdown_lines),
+        height = #markdown_lines,
+        border = "rounded",
+        relative = "cursor",
+        row = 1,
+        col = -1,
+    })
+
+    api.nvim_buf_set_lines(self.bufnr, 0, #markdown_lines, false, markdown_lines)
+
+    set_win_buf_opt(self.winnr, self.bufnr)
+
+    keymap("n", "q", function()
+        self:close_hover()
+    end, { buffer = self.bufnr, silent = true })
+    keymap("n", "<Esc>", function()
+        self:close_hover()
+    end, { buffer = self.bufnr, silent = true })
+end
+
 function tooltip:close_hover()
     if self.winnr ~= nil then
         api.nvim_win_close(self.winnr, true)
@@ -100,7 +130,7 @@ function inlay_list_state:handle_float()
     if input == nil then
         return
     end
-    local markdown_lines = lsp_util.convert_input_to_markdown_lines(input or "", {})
+    local markdown_lines = lsp_util.convert_input_to_markdown_lines(input, {})
 
     if #markdown_lines < 1 or #markdown_lines[1] == 0 then
         return
@@ -116,38 +146,14 @@ function inlay_list_state:handle_float()
         close_events = { "CursorMoved", "CursorMovedI", "BufHidden" },
     })
 
-    tooltip.bufnr = api.nvim_create_buf(false, true)
-    tooltip.winnr = api.nvim_open_win(tooltip.bufnr, false, {
-        width = utils.max_width(markdown_lines),
-        height = #markdown_lines,
-        border = "rounded",
-        relative = "cursor",
-        row = 1,
-        col = -1,
-    })
-
-    api.nvim_buf_set_lines(tooltip.bufnr, 0, #markdown_lines, false, markdown_lines)
-
-    api.nvim_create_autocmd("WinEnter", {
-        callback = function()
-            api.nvim_feedkeys(api.nvim_replace_termcodes("<Esc>", true, false, true), "n", true)
-        end,
-        buffer = tooltip.bufnr,
-    })
-
-    keymap("n", "q", function()
-        tooltip:close_hover()
-    end, { buffer = tooltip.bufnr, silent = true })
-    keymap("n", "<Esc>", function()
-        tooltip:close_hover()
-    end, { buffer = tooltip.bufnr, silent = true })
-
-    vim.wo[tooltip.winnr].signcolumn = "no"
+    tooltip:init(markdown_lines)
 end
 
 ---@param hint_list vim.lsp.inlay_hint.get.ret[]
 function inlay_list_state:init(hint_list)
     inlay_list_state:clear()
+
+    self.bufnr = api.nvim_create_buf(false, true)
 
     for _, value in ipairs(hint_list) do
         local label = value.inlay_hint.label
@@ -163,6 +169,22 @@ function inlay_list_state:init(hint_list)
             end
         end
     end
+    self.winnr = api.nvim_open_win(
+        self.bufnr,
+        true,
+        { border = "rounded", relative = "cursor", width = self.labels_width, height = 1, row = 1, col = -1 }
+    )
+    set_win_buf_opt(self.winnr, self.bufnr)
+
+    keymap("n", "q", function()
+        self:close_hover()
+    end, { buffer = self.bufnr, silent = true })
+    keymap("n", "h", function()
+        self:update(-1)
+    end, { buffer = self.bufnr, silent = true })
+    keymap("n", "l", function()
+        self:update(1)
+    end, { buffer = self.bufnr, silent = true })
 
     self.ns_id = api.nvim_create_namespace("inaly-ui")
     self.extmark_id = api.nvim_buf_set_extmark(self.bufnr, self.ns_id, 0, 0, {
@@ -210,12 +232,16 @@ function inlay_list_state:update(direct)
 end
 
 function inlay_list_state:clear()
-    self.label_raw_datas = {}
+    self.winnr = nil
+    self.bufnr = nil
+
     self.label_text_datas = {}
+    self.labels_width = 0
+    self.label_raw_datas = {}
+
     self.cur_inlay_idx = 0
     self.ns_id = nil
     self.extmark_id = nil
-    self.labels_width = 0
 end
 
 function inlay_list_state:refresh()
@@ -232,27 +258,7 @@ M.float_ui = function(hint_list)
         return
     end
 
-    inlay_list_state.bufnr = api.nvim_create_buf(false, true)
     inlay_list_state:init(hint_list)
-
-    inlay_list_state.winnr = api.nvim_open_win(
-        inlay_list_state.bufnr,
-        true,
-        { border = "rounded", relative = "cursor", width = inlay_list_state.labels_width, height = 1, row = 1, col = 0 }
-    )
-    vim.wo[inlay_list_state.winnr].signcolumn = "no"
-    vim.wo[inlay_list_state.winnr].number = false
-    vim.wo[inlay_list_state.winnr].rnu = false
-
-    keymap("n", "q", function()
-        inlay_list_state:close_hover()
-    end, { buffer = inlay_list_state.bufnr, silent = true })
-    keymap("n", "h", function()
-        inlay_list_state:update(-1)
-    end, { buffer = inlay_list_state.bufnr, silent = true })
-    keymap("n", "l", function()
-        inlay_list_state:update(1)
-    end, { buffer = inlay_list_state.bufnr, silent = true })
 end
 
 ---@param hint vim.lsp.inlay_hint.get.ret

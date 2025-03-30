@@ -62,4 +62,13 @@ M.max_width = function(text)
     return width
 end
 
+---@param winnr integer
+---@param bufnr integer
+M.set_win_buf_opt = function(winnr, bufnr)
+    vim.wo[winnr].signcolumn = "no"
+    vim.wo[winnr].number = false
+    vim.wo[winnr].rnu = false
+    vim.bo[bufnr].ft = "markdown"
+end
+
 return M

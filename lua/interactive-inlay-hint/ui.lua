@@ -4,53 +4,9 @@ local methods = lsp.protocol.Methods
 local lsp_util = lsp.util
 local keymap = vim.keymap.set
 local utils = require("interactive-inlay-hint.utils")
+local tooltip = require("interactive-inlay-hint.tooltip")
 
 local M = {}
-
-local function set_win_buf_opt(winnr, bufnr)
-    vim.wo[winnr].signcolumn = "no"
-    vim.wo[winnr].number = false
-    vim.wo[winnr].rnu = false
-    vim.bo[bufnr].ft = "markdown"
-end
-
-local tooltip = {
-    ---@type integer
-    winnr = nil,
-    ---@type integer
-    bufnr = nil,
-}
-
----@param markdown_lines string[]
-function tooltip:init(markdown_lines)
-    self.bufnr = api.nvim_create_buf(false, true)
-    self.winnr = api.nvim_open_win(self.bufnr, false, {
-        width = utils.max_width(markdown_lines),
-        height = #markdown_lines,
-        border = "rounded",
-        relative = "cursor",
-        row = 1,
-        col = -1,
-    })
-
-    api.nvim_buf_set_lines(self.bufnr, 0, #markdown_lines, false, markdown_lines)
-
-    set_win_buf_opt(self.winnr, self.bufnr)
-
-    keymap("n", "q", function()
-        self:close_hover()
-    end, { buffer = self.bufnr, silent = true })
-    keymap("n", "<Esc>", function()
-        self:close_hover()
-    end, { buffer = self.bufnr, silent = true })
-end
-
-function tooltip:close_hover()
-    if self.winnr ~= nil then
-        api.nvim_win_close(self.winnr, true)
-        self.winnr = nil
-    end
-end
 
 ---@type lsp.Handler
 ---@param inlay_hint lsp.InlayHint
@@ -83,17 +39,6 @@ local function lsp_handler(_, inlay_hint, ctx)
     --     end)
     --     return
     -- end
-    --
-    -- ---@type lsp.InlayHintLabelPart[]
-    -- local tooltip_parts = vim.tbl_filter(
-    --     ---@param part_ lsp.InlayHintLabelPart
-    --     function(part_)
-    --         return part_.tooltip ~= nil
-    --     end,
-    --     label
-    -- )
-    -- part = tooltip_parts[1]
-    -- handle_float(part.tooltip)
 end
 
 local inlay_list_state = {
@@ -116,7 +61,7 @@ local inlay_list_state = {
     ref_hi = "LspReferenceText",
 }
 
-function inlay_list_state:handle_float()
+function inlay_list_state:handle_part()
     local part = self:cur_part()
 
     ---@type string|lsp.MarkupContent
@@ -132,20 +77,6 @@ function inlay_list_state:handle_float()
     end
     local markdown_lines = lsp_util.convert_input_to_markdown_lines(input, {})
 
-    if #markdown_lines < 1 or #markdown_lines[1] == 0 then
-        return
-    end
-
-    ---TODO: add config
-    ---@type vim.api.keyset.win_config
-    local win_opt = { max_width = 80, max_height = 30, border = "rounded" }
-
-    win_opt = vim.tbl_extend("keep", win_opt, {
-        focusable = true,
-        focus_id = "inaly-hint-label",
-        close_events = { "CursorMoved", "CursorMovedI", "BufHidden" },
-    })
-
     tooltip:init(markdown_lines)
 end
 
@@ -160,12 +91,12 @@ function inlay_list_state:init(hint_list)
         if type(label) == "string" then
             self.labels_width = self.labels_width + #label
             table.insert(self.label_text_datas, { label })
-            table.insert(self.label_raw_datas,  label )
+            table.insert(self.label_raw_datas, label)
         else
             for _, part in ipairs(label) do
                 self.labels_width = self.labels_width + #part.value
                 table.insert(self.label_text_datas, { part.value })
-                table.insert(self.label_raw_datas,  part )
+                table.insert(self.label_raw_datas, part)
             end
         end
     end
@@ -174,7 +105,7 @@ function inlay_list_state:init(hint_list)
         true,
         { border = "rounded", relative = "cursor", width = self.labels_width, height = 1, row = 1, col = -1 }
     )
-    set_win_buf_opt(self.winnr, self.bufnr)
+    utils.set_win_buf_opt(self.winnr, self.bufnr)
 
     keymap("n", "q", function()
         self:close_hover()
@@ -204,31 +135,27 @@ function inlay_list_state:cur_part()
     return self.label_raw_datas[self.cur_inlay_idx]
 end
 
----@param direct -1|1
-function inlay_list_state:update(direct)
+---@param direction -1|1
+function inlay_list_state:update(direction)
     if self.cur_inlay_idx == 0 then
-        direct = 1
+        direction = 1
     else
-        if direct == -1 then
-            if self.cur_inlay_idx == 1 then
-                return
-            end
-        elseif direct == 1 then
-            if self.cur_inlay_idx == #self.label_text_datas then
-                return
-            end
+        if direction == -1 and self.cur_inlay_idx == 1 then
+            return
+        elseif direction == 1 and self.cur_inlay_idx == #self.label_text_datas then
+            return
         end
         table.remove(self.label_text_datas[self.cur_inlay_idx], 2)
     end
 
-    self.cur_inlay_idx = self.cur_inlay_idx + direct
+    self.cur_inlay_idx = self.cur_inlay_idx + direction
     table.insert(self.label_text_datas[self.cur_inlay_idx], self.ref_hi)
 
     self:refresh()
 
     tooltip:close_hover()
 
-    self:handle_float()
+    self:handle_part()
 end
 
 function inlay_list_state:clear()

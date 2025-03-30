@@ -9,29 +9,6 @@ local handler = require("interactive-inlay-hint.lsp_handler")
 
 local M = {}
 
----@type lsp.Handler
----@param inlay_hint lsp.InlayHint
-local function lsp_handler(_, inlay_hint, ctx)
-    local client = lsp.get_clients({
-        bufnr = ctx.bufnr,
-        client_id = ctx.client_id,
-        method = methods.textDocument_inlayHint,
-    })[1]
-    if not inlay_hint then
-        return
-    end
-
-    -- if part then
-    --     client:request(methods.textDocument_hover, {
-    --         textDocument = { uri = part.location.uri },
-    --         position = part.location.range.start,
-    --     }, function(_, result, _)
-    --         handle_float(result.contents)
-    --     end)
-    --     return
-    -- end
-end
-
 ---@class LabelData
 ---@field bufnr integer
 ---@field client_id integer
@@ -229,6 +206,32 @@ M.float_ui = function(hint_list)
     inlay_list_state:init(hint_list)
 end
 
+---@type lsp.Handler
+---@param inlay_hint lsp.InlayHint
+local function text_edits_handler(_, inlay_hint, ctx)
+    local _ = lsp.get_clients({
+        bufnr = ctx.bufnr,
+        client_id = ctx.client_id,
+        method = methods.textDocument_inlayHint,
+    })[1]
+    if not inlay_hint then
+        return
+    end
+
+    -- if part then
+    --     client:request(methods.textDocument_hover, {
+    --         textDocument = { uri = part.location.uri },
+    --         position = part.location.range.start,
+    --     }, function(_, result, _)
+    --         handle_float(result.contents)
+    --     end)
+    --     return
+    -- end
+end
+
+---TODO: It can get `textEdits` for insert inalyhint text.
+---No interest at the moment.
+---
 ---@param hint vim.lsp.inlay_hint.get.ret
 M.req = function(hint)
     local client = lsp.get_clients({
@@ -236,7 +239,7 @@ M.req = function(hint)
         client_id = hint.client_id,
         method = methods.textDocument_inlayHint,
     })[1]
-    client:request(methods.inlayHint_resolve, hint.inlay_hint, lsp_handler, hint.bufnr)
+    client:request(methods.inlayHint_resolve, hint.inlay_hint, text_edits_handler, hint.bufnr)
 end
 
 return M

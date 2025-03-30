@@ -1,5 +1,7 @@
 # Interactive With Inalyhint
 
+<https://github.com/user-attachments/assets/01614c63-4989-4428-92df-3b03169d9792>
+
 ## Installation
 
 - [lazy.nvim](https://github.com/folke/lazy.nvim)

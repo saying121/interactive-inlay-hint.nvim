@@ -10,13 +10,15 @@ local M = {
 }
 
 ---@param markdown_lines string[]
-function M:init(markdown_lines)
+---@param super_win integer
+function M:init(markdown_lines, super_win)
     self.bufnr = api.nvim_create_buf(false, true)
     self.winnr = api.nvim_open_win(self.bufnr, false, {
+        win = super_win,
         width = utils.max_width(markdown_lines),
         height = #markdown_lines,
         border = "rounded",
-        relative = "cursor",
+        relative = "win",
         row = 1,
         col = -1,
         title = "tooltip",

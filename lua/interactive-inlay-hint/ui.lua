@@ -34,8 +34,53 @@ local inlay_list_state = {
     extmark_id = nil,
     ref_hi = "LspReferenceText",
 }
+local config = {
+    keymaps = {
+        goto_def = { "n", "gd" },
+        hover = { "n", "K" },
+    },
+}
+
+---@param cur_data LabelData
+---@param part lsp.InlayHintLabelPart
+function inlay_list_state:keymaps(cur_data, part)
+    local client = lsp.get_clients({
+        bufnr = cur_data.bufnr,
+        client_id = cur_data.client_id,
+        method = methods.textDocument_inlayHint,
+    })[1]
+
+    keymap(config.keymaps.goto_def[1], config.keymaps.goto_def[2], function()
+        client:request(methods.textDocument_definition, {
+            textDocument = { uri = part.location.uri },
+            position = part.location.range.start,
+        }, function(_, result, ctx)
+            handler.goto_definition(_, result, ctx)
+        end)
+        self:close_hover()
+    end, { buffer = self.bufnr })
+
+    keymap(config.keymaps.hover[1], config.keymaps.hover[2], function()
+        client:request(
+            methods.textDocument_hover,
+            {
+                textDocument = { uri = part.location.uri },
+                position = part.location.range.start,
+            }
+            -- , function(_, result, _)
+            -- end
+        )
+        -- self:close_hover()
+    end, { buffer = self.bufnr })
+end
 
 function inlay_list_state:handle_part()
+    for _, value in pairs(config.keymaps) do
+        -- Del old keymap.
+        -- Make sure keymap only in the part that have location
+        pcall(vim.keymap.del, value[1], value[2], { buffer = self.bufnr })
+    end
+
     local cur_data = self:cur_data()
     local part = cur_data.part
 
@@ -47,34 +92,7 @@ function inlay_list_state:handle_part()
         input = part.tooltip
 
         if part.location ~= nil then
-            local client = lsp.get_clients({
-                bufnr = cur_data.bufnr,
-                client_id = cur_data.client_id,
-                method = methods.textDocument_inlayHint,
-            })[1]
-
-            keymap("n", "gd", function()
-                client:request(methods.textDocument_definition, {
-                    textDocument = { uri = part.location.uri },
-                    position = part.location.range.start,
-                }, function(_, result, ctx)
-                    handler.goto_definition(_, result, ctx)
-                end)
-                self:close_hover()
-            end, { buffer = self.bufnr })
-
-            keymap("n", "K", function()
-                client:request(
-                    methods.textDocument_hover,
-                    {
-                        textDocument = { uri = part.location.uri },
-                        position = part.location.range.start,
-                    }
-                    -- , function(_, result, _)
-                    -- end
-                )
-                -- self:close_hover()
-            end, { buffer = self.bufnr })
+            self:keymaps(cur_data, part)
         end
     end
 
@@ -83,7 +101,7 @@ function inlay_list_state:handle_part()
     end
     local markdown_lines = lsp_util.convert_input_to_markdown_lines(input, {})
 
-    tooltip:init(markdown_lines)
+    tooltip:init(markdown_lines, self.winnr)
 end
 
 ---@param hint_list vim.lsp.inlay_hint.get.ret[]
@@ -118,11 +136,20 @@ function inlay_list_state:init(hint_list)
             end
         end
     end
-    self.winnr = api.nvim_open_win(
-        self.bufnr,
-        true,
-        { border = "rounded", relative = "cursor", width = self.labels_width, height = 1, row = 1, col = -1 }
-    )
+    self.winnr = api.nvim_open_win(self.bufnr, true, {
+        border = "rounded",
+        relative = "cursor",
+        width = self.labels_width,
+        height = 1,
+        row = 1,
+        col = -1,
+    })
+    api.nvim_create_autocmd("WinClosed", {
+        buffer = self.bufnr,
+        callback = function(_)
+            tooltip:close_hover()
+        end,
+    })
     utils.set_win_buf_opt(self.winnr, self.bufnr)
 
     keymap("n", "q", function()

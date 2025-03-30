@@ -54,22 +54,17 @@ function inlay_list_state:keymaps(cur_data, part)
         client:request(methods.textDocument_definition, {
             textDocument = { uri = part.location.uri },
             position = part.location.range.start,
-        }, function(_, result, ctx)
-            handler.goto_definition(_, result, ctx)
-        end)
+        }, handler.goto_definition)
         self:close_hover()
     end, { buffer = self.bufnr })
 
     keymap(config.keymaps.hover[1], config.keymaps.hover[2], function()
-        client:request(
-            methods.textDocument_hover,
-            {
-                textDocument = { uri = part.location.uri },
-                position = part.location.range.start,
-            }
-            -- , function(_, result, _)
-            -- end
-        )
+        client:request(methods.textDocument_hover, {
+            textDocument = { uri = part.location.uri },
+            position = part.location.range.start,
+        }, function(_, result, _)
+            handler.hover(result)
+        end)
         -- self:close_hover()
     end, { buffer = self.bufnr })
 end
@@ -144,10 +139,11 @@ function inlay_list_state:init(hint_list)
         row = 1,
         col = -1,
     })
-    api.nvim_create_autocmd("WinClosed", {
+    api.nvim_create_autocmd({ "WinClosed", "WinLeave" }, {
         buffer = self.bufnr,
         callback = function(_)
             tooltip:close_hover()
+            handler.hover_state:close_hover()
         end,
     })
     utils.set_win_buf_opt(self.winnr, self.bufnr)
@@ -172,7 +168,6 @@ end
 
 function inlay_list_state:close_hover()
     api.nvim_win_close(self.winnr, true)
-    tooltip:close_hover()
 end
 
 ---@return LabelData
@@ -199,6 +194,7 @@ function inlay_list_state:update(direction)
     self:refresh()
 
     tooltip:close_hover()
+    handler.hover_state:close_hover()
 
     self:handle_part()
 end

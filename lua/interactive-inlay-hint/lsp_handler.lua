@@ -1,9 +1,26 @@
-local util = vim.lsp.util
-local api = vim.api
+local lsp_util = vim.lsp.util
 local vfn = vim.fn
 local log = vim.lsp.log
+local api = vim.api
+local keymap = vim.keymap.set
+local utils = require("interactive-inlay-hint.utils")
 
-local M = {}
+local hover_state = {
+    ---@type integer
+    winnr = nil,
+    ---@type integer
+    bufnr = nil,
+}
+
+function hover_state:close_hover()
+    if self.winnr ~= nil then
+        api.nvim_win_close(self.winnr, true)
+        self.winnr = nil
+        self.bufnr = nil
+    end
+end
+
+local M = { hover_state = hover_state }
 
 ---@type lsp.Handler
 M.goto_definition = function(_, result, ctx)
@@ -13,17 +30,45 @@ M.goto_definition = function(_, result, ctx)
     end
 
     if vim.islist(result) then
-        util.show_document(result[1], "utf-8", { focus = true })
+        lsp_util.show_document(result[1], "utf-8", { focus = true })
 
         if #result > 1 then
-            vfn.setqflist(util.locations_to_items(result))
+            vfn.setqflist(lsp_util.locations_to_items(result))
         end
     else
-        util.show_document(result, "utf-8", { focus = true })
+        lsp_util.show_document(result, "utf-8", { focus = true })
     end
 end
----@type lsp.Handler
-M.hover = function(_, result, ctx)
+
+---@param super_win integer
+M.hover = function(result, super_win)
+    if result.contents == nil then
+        return
+    end
+    local markdown_lines = lsp_util.convert_input_to_markdown_lines(result.contents, {})
+    hover_state.bufnr = api.nvim_create_buf(false, true)
+    hover_state.winnr = api.nvim_open_win(hover_state.bufnr, false, {
+        win = super_win,
+        width = utils.max_width(markdown_lines),
+        height = #markdown_lines,
+        border = "rounded",
+        relative = "win",
+        row = 1,
+        col = -1,
+        title = "tooltip",
+        title_pos = "center",
+    })
+
+    api.nvim_buf_set_lines(hover_state.bufnr, 0, #markdown_lines, false, markdown_lines)
+
+    utils.set_win_buf_opt(hover_state.winnr, hover_state.bufnr)
+
+    keymap("n", "q", function()
+        hover_state:close_hover()
+    end, { buffer = hover_state.bufnr, silent = true })
+    keymap("n", "<Esc>", function()
+        hover_state:close_hover()
+    end, { buffer = hover_state.bufnr, silent = true })
 end
 
 return M

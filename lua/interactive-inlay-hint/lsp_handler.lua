@@ -61,8 +61,6 @@ M.hover = function(result, super_win)
         relative = "win",
         row = 1,
         col = -1,
-        title = "tooltip",
-        title_pos = "center",
     })
     utils.min_width_height(win_opts, width, height)
 

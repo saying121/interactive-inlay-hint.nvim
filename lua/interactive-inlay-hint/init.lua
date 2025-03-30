@@ -4,18 +4,17 @@ local config = require("interactive-inlay-hint.config")
 
 local M = {}
 
---- @param range lsp.Range
-M.inlay_tooltip_at_range = function(range)
-    local hint_list = vim.lsp.inlay_hint.get({ bufnr = 0, range = range })
-    ui.float_ui(hint_list)
-end
-
 M.setup = function(opts)
     config.setup(opts)
 end
 
-M.inlay_tooltip_at_cursor = function()
-    M.inlay_tooltip_at_range(utils.select_word())
+---Return the inalyhint count
+---@return integer
+M.interaction_inlay_hint = function()
+    local hint_list = vim.lsp.inlay_hint.get({ bufnr = 0, range = utils.select_word() })
+    ui.float_ui(hint_list)
+
+    return #hint_list
 end
 
 return M

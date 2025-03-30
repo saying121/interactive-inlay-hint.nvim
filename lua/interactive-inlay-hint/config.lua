@@ -1,4 +1,15 @@
+---@class inter_inlay_keymaps
+---@field goto_def? table
+---@field hover? table
+
+---@class inter_inlay_config
+---@field keymaps? inter_inlay_keymaps
+---@field hover_hi? string
+---@field win_opts vim.api.keyset.win_config
+
 local M = {}
+
+---@type inter_inlay_config
 local default = {
     keymaps = {
         goto_def = { "n", "gd" },
@@ -14,6 +25,7 @@ local default = {
 
 M.values = default
 
+---@param opts inter_inlay_config
 M.setup = function(opts)
     M.values = vim.tbl_deep_extend("force", default, opts or {})
 end

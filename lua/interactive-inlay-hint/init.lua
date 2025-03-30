@@ -4,6 +4,7 @@ local config = require("interactive-inlay-hint.config")
 
 local M = {}
 
+---@param opts inter_inlay_config
 M.setup = function(opts)
     config.setup(opts)
 end

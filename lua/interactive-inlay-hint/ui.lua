@@ -105,7 +105,7 @@ local inlay_list_state = {
     ---@type string[][]
     label_text_datas = {},
     labels_width = 0,
-    ---@type (string|lsp.InlayHintLabelPart[])[]
+    ---@type (string|lsp.InlayHintLabelPart)[]
     label_raw_datas = {},
 
     cur_inlay_idx = 0,
@@ -124,7 +124,7 @@ function inlay_list_state:handle_float()
     if type(part) == "string" then
         input = part
     else
-        input = part[1].tooltip
+        input = part.tooltip
     end
 
     if input == nil then
@@ -160,12 +160,12 @@ function inlay_list_state:init(hint_list)
         if type(label) == "string" then
             self.labels_width = self.labels_width + #label
             table.insert(self.label_text_datas, { label })
-            table.insert(self.label_raw_datas, { label })
+            table.insert(self.label_raw_datas,  label )
         else
             for _, part in ipairs(label) do
                 self.labels_width = self.labels_width + #part.value
                 table.insert(self.label_text_datas, { part.value })
-                table.insert(self.label_raw_datas, { part })
+                table.insert(self.label_raw_datas,  part )
             end
         end
     end
@@ -199,7 +199,7 @@ function inlay_list_state:close_hover()
     tooltip:close_hover()
 end
 
----@return lsp.InlayHintLabelPart[]|string
+---@return lsp.InlayHintLabelPart|string
 function inlay_list_state:cur_part()
     return self.label_raw_datas[self.cur_inlay_idx]
 end

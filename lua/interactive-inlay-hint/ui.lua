@@ -210,6 +210,7 @@ function inlay_list_state:update(direct)
 end
 
 function inlay_list_state:clear()
+    self.label_raw_datas = {}
     self.label_text_datas = {}
     self.cur_inlay_idx = 0
     self.ns_id = nil

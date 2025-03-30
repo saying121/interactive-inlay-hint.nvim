@@ -50,4 +50,16 @@ M.full_label = function(label)
     return res
 end
 
+---@param text string[]
+---@return integer
+M.max_width = function(text)
+    local width = 0
+    for _, value in ipairs(text) do
+        if #value > width then
+            width = #value
+        end
+    end
+    return width
+end
+
 return M

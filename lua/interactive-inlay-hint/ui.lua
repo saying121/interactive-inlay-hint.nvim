@@ -110,8 +110,10 @@ function inlay_list_state:init(hint_list)
     for i, value in ipairs(hint_list) do
         local label = value.inlay_hint.label
         if type(label) == "string" then
+            ---@type TextData
+            local dt = { col = self.labels_width, row = 0, virt_text = { label } }
             self.labels_width = self.labels_width + #label
-            table.insert(self.label_text_datas, { label })
+            table.insert(self.label_text_datas, dt)
             ---@type LabelData
             local lbdt = {
                 bufnr = value.bufnr,

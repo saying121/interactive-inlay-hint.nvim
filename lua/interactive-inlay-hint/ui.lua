@@ -15,13 +15,18 @@ local M = {}
 ---@field client_id integer
 ---@field part string|lsp.InlayHintLabelPart
 
+---@class TextData
+---@field row integer
+---@field col integer
+---@field virt_text string[] [text,hl]
+
 local inlay_list_state = {
     ---@type integer
     winnr = nil,
     ---@type integer
     bufnr = nil,
 
-    ---@type string[][]
+    ---@type TextData[]
     label_text_datas = {},
     labels_width = 0,
     ---@type LabelData[]
@@ -30,8 +35,8 @@ local inlay_list_state = {
     cur_inlay_idx = 0,
     ---@type integer
     ns_id = nil,
-    ---@type integer
-    extmark_id = nil,
+    ---@type integer[]
+    extmark_ids = {},
     ref_hi = config.values.hover_hi,
 }
 
@@ -102,7 +107,7 @@ function inlay_list_state:init(hint_list)
 
     self.bufnr = api.nvim_create_buf(false, true)
 
-    for idx_i, value in ipairs(hint_list) do
+    for i, value in ipairs(hint_list) do
         local label = value.inlay_hint.label
         if type(label) == "string" then
             self.labels_width = self.labels_width + #label
@@ -115,14 +120,17 @@ function inlay_list_state:init(hint_list)
             }
             table.insert(self.label_raw_datas, lbdt)
         else
-            for idx_j, part in ipairs(label) do
+            if i > 1 then
+                self.labels_width = self.labels_width + 1
+            end
+            for _, part in ipairs(label) do
+                ---@type TextData
+                local dt = { col = self.labels_width, row = 0, virt_text = { part.value } }
+
                 self.labels_width = self.labels_width + #part.value
-                local prefix = ""
-                if idx_i > 1 and idx_j == 1 then
-                    prefix = " "
-                    self.labels_width = self.labels_width + 1
-                end
-                table.insert(self.label_text_datas, { prefix .. part.value })
+
+                table.insert(self.label_text_datas, dt)
+
                 ---@type LabelData
                 local lbdt = {
                     bufnr = value.bufnr,
@@ -146,6 +154,9 @@ function inlay_list_state:init(hint_list)
     utils.min_width_height(win_opts, width, height)
 
     self.winnr = api.nvim_open_win(self.bufnr, true, win_opts)
+    api.nvim_buf_set_text(self.bufnr, 0, 0, 0, 0, { string.format("%" .. self.labels_width .. "s", " ") })
+    api.nvim_win_set_cursor(self.winnr, { 1, 0 })
+
     api.nvim_create_autocmd({ "WinClosed" }, {
         buffer = self.bufnr,
         callback = function(_)
@@ -165,11 +176,6 @@ function inlay_list_state:init(hint_list)
         self:update(1)
     end, { buffer = self.bufnr, silent = true })
 
-    self.ns_id = api.nvim_create_namespace("inaly-ui")
-    self.extmark_id = api.nvim_buf_set_extmark(self.bufnr, self.ns_id, 0, 0, {
-        virt_text = self.label_text_datas,
-        virt_text_pos = "inline",
-    })
     self:update(1)
 end
 
@@ -192,11 +198,11 @@ function inlay_list_state:update(direction)
         elseif direction == 1 and self.cur_inlay_idx == #self.label_text_datas then
             return
         end
-        table.remove(self.label_text_datas[self.cur_inlay_idx], 2)
+        table.remove(self.label_text_datas[self.cur_inlay_idx].virt_text, 2)
     end
 
     self.cur_inlay_idx = self.cur_inlay_idx + direction
-    table.insert(self.label_text_datas[self.cur_inlay_idx], self.ref_hi)
+    table.insert(self.label_text_datas[self.cur_inlay_idx].virt_text, self.ref_hi)
 
     self:refresh()
 
@@ -216,15 +222,21 @@ function inlay_list_state:clear()
 
     self.cur_inlay_idx = 0
     self.ns_id = nil
-    self.extmark_id = nil
 end
 
 function inlay_list_state:refresh()
-    api.nvim_buf_del_extmark(self.bufnr, self.ns_id, self.extmark_id)
-    self.extmark_id = api.nvim_buf_set_extmark(self.bufnr, self.ns_id, 0, 0, {
-        virt_text = self.label_text_datas,
-        virt_text_pos = "inline",
-    })
+    self.ns_id = api.nvim_create_namespace("inaly-ui")
+    for _, id in pairs(self.extmark_ids) do
+        api.nvim_buf_del_extmark(self.bufnr, self.ns_id, id)
+    end
+    self.extmark_ids = {}
+    for _, vt in ipairs(self.label_text_datas) do
+        local id = api.nvim_buf_set_extmark(self.bufnr, self.ns_id, 0, vt.col, {
+            virt_text = { vt.virt_text },
+            virt_text_pos = "overlay",
+        })
+        table.insert(self.extmark_ids, id)
+    end
 end
 
 ---@param hint_list vim.lsp.inlay_hint.get.ret[]

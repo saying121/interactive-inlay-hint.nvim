@@ -9,6 +9,7 @@
 ```lua
 return {
     "saying121/interactive-inlay-hint.nvim",
+    event = "LspAttach",
     config = function()
         local inter_inlay = require("interactive-inlay-hint")
         inter_inlay.setup({
@@ -28,7 +29,7 @@ return {
             end
             -- or
             -- if inter_inlay.exists_inlay_hint() then
-            --     require("interactive-inlay-hint").interaction_inlay_hint()
+            --     inter_inlay.interaction_inlay_hint()
             -- else
             --     vim.lsp.buf.hover({ border = "single" })
             -- end

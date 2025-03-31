@@ -102,7 +102,7 @@ function inlay_list_state:init(hint_list)
 
     self.bufnr = api.nvim_create_buf(false, true)
 
-    for _, value in ipairs(hint_list) do
+    for idx_i, value in ipairs(hint_list) do
         local label = value.inlay_hint.label
         if type(label) == "string" then
             self.labels_width = self.labels_width + #label
@@ -115,9 +115,14 @@ function inlay_list_state:init(hint_list)
             }
             table.insert(self.label_raw_datas, lbdt)
         else
-            for _, part in ipairs(label) do
+            for idx_j, part in ipairs(label) do
                 self.labels_width = self.labels_width + #part.value
-                table.insert(self.label_text_datas, { part.value })
+                local prefix = ""
+                if idx_i > 1 and idx_j == 1 then
+                    prefix = " "
+                    self.labels_width = self.labels_width + 1
+                end
+                table.insert(self.label_text_datas, { prefix .. part.value })
                 ---@type LabelData
                 local lbdt = {
                     bufnr = value.bufnr,
@@ -135,8 +140,6 @@ function inlay_list_state:init(hint_list)
     local win_opts = vim.tbl_extend("keep", config.values.win_opts, {
         border = "rounded",
         relative = "cursor",
-        -- width = self.labels_width,
-        -- height = 1,
         row = 1,
         col = -1,
     })

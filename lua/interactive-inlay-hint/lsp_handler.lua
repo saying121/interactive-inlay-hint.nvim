@@ -55,11 +55,9 @@ M.hover = function(result, super_win)
     ---@type vim.api.keyset.win_config
     local win_opts = vim.tbl_extend("keep", config.values.win_opts, {
         win = super_win,
-        -- width = utils.max_width(markdown_lines),
-        -- height = #markdown_lines,
         border = "rounded",
         relative = "win",
-        row = 1,
+        row = 2,
         col = -1,
     })
     utils.min_width_height(win_opts, width, height)

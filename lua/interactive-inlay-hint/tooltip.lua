@@ -20,11 +20,9 @@ function M:init(markdown_lines, super_win)
 
     local win_opts = vim.tbl_extend("keep", config.values.win_opts, {
         win = super_win,
-        -- width = utils.max_width(markdown_lines),
-        -- height = #markdown_lines,
         border = "rounded",
         relative = "win",
-        row = 1,
+        row = 2,
         col = -1,
         title = "tooltip",
         title_pos = "center",

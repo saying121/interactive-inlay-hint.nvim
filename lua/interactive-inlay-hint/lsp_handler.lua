@@ -35,6 +35,8 @@ M.goto_definition = function(_, result, ctx)
 
         if #result > 1 then
             vfn.setqflist(lsp_util.locations_to_items(result))
+            api.nvim_command("copen")
+            api.nvim_command("wincmd p")
         end
     else
         lsp_util.show_document(result, "utf-8", { focus = true })

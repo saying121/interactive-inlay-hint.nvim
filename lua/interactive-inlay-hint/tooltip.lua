@@ -12,7 +12,7 @@ local M = {
 
 ---@param markdown_lines string[]
 ---@param super_win integer
-function M:init(markdown_lines, super_win)
+function M:init(markdown_lines, super_win, col)
     self.bufnr = api.nvim_create_buf(false, true)
 
     local width = utils.max_width(markdown_lines)
@@ -23,7 +23,7 @@ function M:init(markdown_lines, super_win)
         border = "rounded",
         relative = "win",
         row = 2,
-        col = -1,
+        col = col - 1,
         title = "tooltip",
         title_pos = "center",
     })

@@ -16,7 +16,7 @@ local M = {}
 ---@field client_id integer
 ---@field part string|lsp.InlayHintLabelPart
 
----@class TextData
+---@class TextPos
 ---@field row integer
 ---@field col integer
 ---@field end_col integer
@@ -27,11 +27,11 @@ local inlay_list_state = {
     ---@type integer
     bufnr = nil,
 
-    ---@type TextData[]
-    label_text_datas = {},
+    ---@type TextPos[]
+    label_text_pos = {},
     labels_width = 0,
     ---@type LabelData[]
-    label_raw_datas = {},
+    label_datas = {},
 
     cur_inlay_idx = 0,
     ---@type integer
@@ -99,7 +99,8 @@ function inlay_list_state:handle_part()
     end
     local markdown_lines = lsp_util.convert_input_to_markdown_lines(input, {})
 
-    tooltip:init(markdown_lines, self.winnr)
+    local cur_text = self:cur_text_pos()
+    tooltip:init(markdown_lines, self.winnr,cur_text.col)
 end
 
 ---@param hint_list vim.lsp.inlay_hint.get.ret[]
@@ -115,28 +116,28 @@ function inlay_list_state:init(hint_list)
             self.labels_width = self.labels_width + 1
         end
         if type(label) == "string" then
-            ---@type TextData
+            ---@type TextPos
             local dt = { col = self.labels_width, end_col = self.labels_width + #label, row = 0 }
             api.nvim_buf_set_text(self.bufnr, 0, self.labels_width, 0, self.labels_width, { label })
 
             self.labels_width = self.labels_width + #label
-            table.insert(self.label_text_datas, dt)
+            table.insert(self.label_text_pos, dt)
             ---@type LabelData
             local lbdt = {
                 bufnr = value.bufnr,
                 client_id = value.client_id,
                 part = label,
             }
-            table.insert(self.label_raw_datas, lbdt)
+            table.insert(self.label_datas, lbdt)
         else
             for _, part in ipairs(label) do
-                ---@type TextData
+                ---@type TextPos
                 local dt = { col = self.labels_width, end_col = self.labels_width + #part.value, row = 0 }
                 api.nvim_buf_set_text(self.bufnr, 0, self.labels_width, 0, self.labels_width, { part.value })
 
                 self.labels_width = self.labels_width + #part.value
 
-                table.insert(self.label_text_datas, dt)
+                table.insert(self.label_text_pos, dt)
 
                 ---@type LabelData
                 local lbdt = {
@@ -144,7 +145,7 @@ function inlay_list_state:init(hint_list)
                     client_id = value.client_id,
                     part = part,
                 }
-                table.insert(self.label_raw_datas, lbdt)
+                table.insert(self.label_datas, lbdt)
             end
         end
     end
@@ -191,7 +192,12 @@ end
 
 ---@return LabelData
 function inlay_list_state:cur_data()
-    return self.label_raw_datas[self.cur_inlay_idx]
+    return self.label_datas[self.cur_inlay_idx]
+end
+
+---@return TextPos
+function inlay_list_state:cur_text_pos()
+    return self.label_text_pos[self.cur_inlay_idx]
 end
 
 ---@param direction -1|1
@@ -201,14 +207,14 @@ function inlay_list_state:update(direction)
     else
         if direction == -1 and self.cur_inlay_idx == 1 then
             return
-        elseif direction == 1 and self.cur_inlay_idx == #self.label_text_datas then
+        elseif direction == 1 and self.cur_inlay_idx == #self.label_text_pos then
             return
         end
     end
 
     self.cur_inlay_idx = self.cur_inlay_idx + direction
-    local cur_data = self.label_text_datas[self.cur_inlay_idx]
-    api.nvim_win_set_cursor(self.winnr, { 1, cur_data.col })
+    local cur_text = self:cur_text_pos()
+    api.nvim_win_set_cursor(self.winnr, { 1, cur_text.col })
 
     self:refresh()
 
@@ -222,9 +228,9 @@ function inlay_list_state:clear()
     self.winnr = nil
     self.bufnr = nil
 
-    self.label_text_datas = {}
+    self.label_text_pos = {}
     self.labels_width = 0
-    self.label_raw_datas = {}
+    self.label_datas = {}
 
     self.cur_inlay_idx = 0
     self.ns_id = nil
@@ -236,7 +242,7 @@ function inlay_list_state:refresh()
         api.nvim_buf_del_extmark(self.bufnr, self.ns_id, id)
     end
     self.extmark_ids = {}
-    for idx, vt in ipairs(self.label_text_datas) do
+    for idx, vt in ipairs(self.label_text_pos) do
         if idx == self.cur_inlay_idx then
             local id = api.nvim_buf_set_extmark(self.bufnr, self.ns_id, 0, vt.col, {
                 end_col = vt.end_col,

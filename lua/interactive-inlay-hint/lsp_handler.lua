@@ -1,5 +1,6 @@
 local lsp = vim.lsp
 local lsp_util = lsp.util
+local methods = lsp.protocol.Methods
 local vfn = vim.fn
 local log = lsp.log
 local api = vim.api

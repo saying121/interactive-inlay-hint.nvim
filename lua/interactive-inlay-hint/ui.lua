@@ -18,7 +18,7 @@ local M = {}
 ---@class TextData
 ---@field row integer
 ---@field col integer
----@field virt_text string[] [text,hl]
+---@field end_col integer
 
 local inlay_list_state = {
     ---@type integer
@@ -115,7 +115,7 @@ function inlay_list_state:init(hint_list)
         end
         if type(label) == "string" then
             ---@type TextData
-            local dt = { col = self.labels_width, row = 0, virt_text = { label } }
+            local dt = { col = self.labels_width, end_col = self.labels_width + #label, row = 0 }
             api.nvim_buf_set_text(self.bufnr, 0, self.labels_width, 0, self.labels_width, { label })
 
             self.labels_width = self.labels_width + #label
@@ -130,8 +130,8 @@ function inlay_list_state:init(hint_list)
         else
             for _, part in ipairs(label) do
                 ---@type TextData
-                local dt = { col = self.labels_width, row = 0, virt_text = { part.value } }
-            api.nvim_buf_set_text(self.bufnr, 0, self.labels_width, 0, self.labels_width, { part.value })
+                local dt = { col = self.labels_width, end_col = self.labels_width + #part.value, row = 0 }
+                api.nvim_buf_set_text(self.bufnr, 0, self.labels_width, 0, self.labels_width, { part.value })
 
                 self.labels_width = self.labels_width + #part.value
 
@@ -203,13 +203,13 @@ function inlay_list_state:update(direction)
         elseif direction == 1 and self.cur_inlay_idx == #self.label_text_datas then
             return
         end
-        table.remove(self.label_text_datas[self.cur_inlay_idx].virt_text, 2)
+        -- table.remove(self.label_text_datas[self.cur_inlay_idx].virt_text, 2)
     end
 
     self.cur_inlay_idx = self.cur_inlay_idx + direction
     local cur_data = self.label_text_datas[self.cur_inlay_idx]
     api.nvim_win_set_cursor(self.winnr, { 1, cur_data.col })
-    table.insert(cur_data.virt_text, self.ref_hi)
+    -- table.insert(cur_data.virt_text, self.ref_hi)
 
     self:refresh()
 
@@ -237,12 +237,14 @@ function inlay_list_state:refresh()
         api.nvim_buf_del_extmark(self.bufnr, self.ns_id, id)
     end
     self.extmark_ids = {}
-    for _, vt in ipairs(self.label_text_datas) do
-        local id = api.nvim_buf_set_extmark(self.bufnr, self.ns_id, 0, vt.col, {
-            virt_text = { vt.virt_text },
-            virt_text_pos = "overlay",
-        })
-        table.insert(self.extmark_ids, id)
+    for idx, vt in ipairs(self.label_text_datas) do
+        if idx == self.cur_inlay_idx then
+            local id = api.nvim_buf_set_extmark(self.bufnr, self.ns_id, 0, vt.col, {
+                end_col = vt.end_col,
+                hl_group = config.values.hover_hi,
+            })
+            table.insert(self.extmark_ids, id)
+        end
     end
 end
 

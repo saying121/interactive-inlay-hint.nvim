@@ -1,6 +1,6 @@
 # Interactive With Inalyhint
 
-<https://github.com/user-attachments/assets/01614c63-4989-4428-92df-3b03169d9792>
+<https://github.com/user-attachments/assets/916bbb2d-ef25-4c9e-acf4-044b1a81d69f>
 
 ## Installation
 

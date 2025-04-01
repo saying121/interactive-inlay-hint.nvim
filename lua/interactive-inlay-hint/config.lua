@@ -1,6 +1,6 @@
 ---@class inter_inlay_keymaps
----@field goto_def? table
----@field hover? table
+---@field goto_def? string
+---@field hover? string
 
 ---@class inter_inlay_config
 ---@field keymaps? inter_inlay_keymaps
@@ -12,8 +12,8 @@ local M = {}
 ---@type inter_inlay_config
 local default = {
     keymaps = {
-        goto_def = { "n", "gd" },
-        hover = { "n", "K" },
+        goto_def = "gd",
+        hover = "K",
     },
     hover_hi = "LspReferenceText",
     ---@type vim.api.keyset.win_config

@@ -50,7 +50,7 @@ function inlay_list_state:keymaps(cur_data, part)
         method = methods.textDocument_inlayHint,
     })[1]
 
-    keymap(config.values.keymaps.goto_def[1], config.values.keymaps.goto_def[2], function()
+    keymap("n", config.values.keymaps.goto_def, function()
         client:request(methods.textDocument_definition, {
             textDocument = { uri = part.location.uri },
             position = part.location.range.start,
@@ -58,7 +58,7 @@ function inlay_list_state:keymaps(cur_data, part)
         self:close_hover()
     end, { buffer = self.bufnr })
 
-    keymap(config.values.keymaps.hover[1], config.values.keymaps.hover[2], function()
+    keymap("n", config.values.keymaps.hover, function()
         if handler.hover_state.winnr ~= nil then
             api.nvim_set_current_win(handler.hover_state.winnr)
             return

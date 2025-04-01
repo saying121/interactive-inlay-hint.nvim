@@ -45,7 +45,7 @@ end
 
 ---@param super_win integer
 M.hover = function(result, super_win)
-    if result.contents == nil then
+    if not (result ~= nil  and result.contents ~=nil) then
         return
     end
     local markdown_lines = lsp_util.convert_input_to_markdown_lines(result.contents, {})

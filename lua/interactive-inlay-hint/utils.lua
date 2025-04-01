@@ -68,6 +68,8 @@ M.set_win_buf_opt = function(winnr, bufnr)
     vim.wo[winnr].signcolumn = "no"
     vim.wo[winnr].number = false
     vim.wo[winnr].rnu = false
+    vim.wo[winnr].sidescrolloff = 0
+    vim.bo[bufnr].modifiable = false
     vim.bo[bufnr].ft = "markdown"
 end
 

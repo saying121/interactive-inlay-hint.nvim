@@ -26,8 +26,9 @@ function M:init(markdown_lines, super_win)
         col = -1,
         title = "tooltip",
         title_pos = "center",
+        width = width,
     })
-    utils.min_width_height(win_opts, width, height)
+    win_opts.height = math.min(win_opts.height, height)
 
     self.winnr = api.nvim_open_win(self.bufnr, false, win_opts)
 

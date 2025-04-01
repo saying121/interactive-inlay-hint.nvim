@@ -204,7 +204,9 @@ function inlay_list_state:update(direction)
     end
 
     self.cur_inlay_idx = self.cur_inlay_idx + direction
-    table.insert(self.label_text_datas[self.cur_inlay_idx].virt_text, self.ref_hi)
+    local cur_data = self.label_text_datas[self.cur_inlay_idx]
+    api.nvim_win_set_cursor(self.winnr, { 1, cur_data.col })
+    table.insert(cur_data.virt_text, self.ref_hi)
 
     self:refresh()
 

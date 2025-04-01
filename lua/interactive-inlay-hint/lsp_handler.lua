@@ -1,8 +1,10 @@
-local lsp_util = vim.lsp.util
+local lsp = vim.lsp
+local lsp_util = lsp.util
 local vfn = vim.fn
-local log = vim.lsp.log
+local log = lsp.log
 local api = vim.api
 local keymap = vim.keymap.set
+
 local utils = require("interactive-inlay-hint.utils")
 local config = require("interactive-inlay-hint.config")
 
@@ -77,6 +79,31 @@ M.hover = function(result, super_win)
 
     keymap("n", "q", quit_win, { buffer = hover_state.bufnr, silent = true })
     keymap("n", "<Esc>", quit_win, { buffer = hover_state.bufnr, silent = true })
+end
+
+
+
+---@type lsp.Handler
+---@param inlay_hint lsp.InlayHint
+M.text_edits_handler = function (_, inlay_hint, ctx)
+    local _ = lsp.get_clients({
+        bufnr = ctx.bufnr,
+        client_id = ctx.client_id,
+        method = methods.textDocument_inlayHint,
+    })[1]
+    if not inlay_hint then
+        return
+    end
+
+    -- if part then
+    --     client:request(methods.textDocument_hover, {
+    --         textDocument = { uri = part.location.uri },
+    --         position = part.location.range.start,
+    --     }, function(_, result, _)
+    --         handle_float(result.contents)
+    --     end)
+    --     return
+    -- end
 end
 
 return M

@@ -3,6 +3,7 @@ local lsp = vim.lsp
 local methods = lsp.protocol.Methods
 local lsp_util = lsp.util
 local keymap = vim.keymap.set
+
 local utils = require("interactive-inlay-hint.utils")
 local tooltip = require("interactive-inlay-hint.tooltip")
 local handler = require("interactive-inlay-hint.lsp_handler")
@@ -37,12 +38,12 @@ local inlay_list_state = {
     ns_id = nil,
     ---@type integer[]
     extmark_ids = {},
-    ref_hi = config.values.hover_hi,
 }
 
 ---@param cur_data LabelData
 ---@param part lsp.InlayHintLabelPart
 function inlay_list_state:keymaps(cur_data, part)
+    vim.print(part.command)
     local client = lsp.get_clients({
         bufnr = cur_data.bufnr,
         client_id = cur_data.client_id,
@@ -203,13 +204,11 @@ function inlay_list_state:update(direction)
         elseif direction == 1 and self.cur_inlay_idx == #self.label_text_datas then
             return
         end
-        -- table.remove(self.label_text_datas[self.cur_inlay_idx].virt_text, 2)
     end
 
     self.cur_inlay_idx = self.cur_inlay_idx + direction
     local cur_data = self.label_text_datas[self.cur_inlay_idx]
     api.nvim_win_set_cursor(self.winnr, { 1, cur_data.col })
-    -- table.insert(cur_data.virt_text, self.ref_hi)
 
     self:refresh()
 
@@ -257,29 +256,6 @@ M.float_ui = function(hint_list)
     inlay_list_state:init(hint_list)
 end
 
----@type lsp.Handler
----@param inlay_hint lsp.InlayHint
-local function text_edits_handler(_, inlay_hint, ctx)
-    local _ = lsp.get_clients({
-        bufnr = ctx.bufnr,
-        client_id = ctx.client_id,
-        method = methods.textDocument_inlayHint,
-    })[1]
-    if not inlay_hint then
-        return
-    end
-
-    -- if part then
-    --     client:request(methods.textDocument_hover, {
-    --         textDocument = { uri = part.location.uri },
-    --         position = part.location.range.start,
-    --     }, function(_, result, _)
-    --         handle_float(result.contents)
-    --     end)
-    --     return
-    -- end
-end
-
 ---TODO: It can get `textEdits` for insert inalyhint text.
 ---No interest at the moment.
 ---
@@ -290,7 +266,7 @@ M.req = function(hint)
         client_id = hint.client_id,
         method = methods.textDocument_inlayHint,
     })[1]
-    client:request(methods.inlayHint_resolve, hint.inlay_hint, text_edits_handler, hint.bufnr)
+    client:request(methods.inlayHint_resolve, hint.inlay_hint, handler.text_edits_handler, hint.bufnr)
 end
 
 return M

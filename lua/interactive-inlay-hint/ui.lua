@@ -67,7 +67,7 @@ function inlay_list_state:keymaps(cur_data, part)
             textDocument = { uri = part.location.uri },
             position = part.location.range.start,
         }, function(_, result, _)
-            handler.hover(result, self.winnr)
+            handler.hover(result, self.winnr, self:cur_text_pos().col)
         end)
     end, { buffer = self.bufnr })
 end
@@ -100,7 +100,7 @@ function inlay_list_state:handle_part()
     local markdown_lines = lsp_util.convert_input_to_markdown_lines(input, {})
 
     local cur_text = self:cur_text_pos()
-    tooltip:init(markdown_lines, self.winnr,cur_text.col)
+    tooltip:init(markdown_lines, self.winnr, cur_text.col)
 end
 
 ---@param hint_list vim.lsp.inlay_hint.get.ret[]

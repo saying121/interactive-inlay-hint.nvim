@@ -46,8 +46,8 @@ M.goto_definition = function(_, result, ctx)
 end
 
 ---@param super_win integer
-M.hover = function(result, super_win)
-    if not (result ~= nil  and result.contents ~=nil) then
+M.hover = function(result, super_win, col)
+    if not (result ~= nil and result.contents ~= nil) then
         return
     end
     local markdown_lines = lsp_util.convert_input_to_markdown_lines(result.contents, {})
@@ -62,7 +62,7 @@ M.hover = function(result, super_win)
         border = "rounded",
         relative = "win",
         row = 2,
-        col = -1,
+        col = col - 1,
     })
     utils.min_width_height(win_opts, width, height)
 
@@ -81,11 +81,9 @@ M.hover = function(result, super_win)
     keymap("n", "<Esc>", quit_win, { buffer = hover_state.bufnr, silent = true })
 end
 
-
-
 ---@type lsp.Handler
 ---@param inlay_hint lsp.InlayHint
-M.text_edits_handler = function (_, inlay_hint, ctx)
+M.text_edits_handler = function(_, inlay_hint, ctx)
     local _ = lsp.get_clients({
         bufnr = ctx.bufnr,
         client_id = ctx.client_id,

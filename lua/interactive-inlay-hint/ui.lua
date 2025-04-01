@@ -109,9 +109,15 @@ function inlay_list_state:init(hint_list)
 
     for i, value in ipairs(hint_list) do
         local label = value.inlay_hint.label
+        if i > 1 then
+            api.nvim_buf_set_text(self.bufnr, 0, self.labels_width, 0, self.labels_width, { " " })
+            self.labels_width = self.labels_width + 1
+        end
         if type(label) == "string" then
             ---@type TextData
             local dt = { col = self.labels_width, row = 0, virt_text = { label } }
+            api.nvim_buf_set_text(self.bufnr, 0, self.labels_width, 0, self.labels_width, { label })
+
             self.labels_width = self.labels_width + #label
             table.insert(self.label_text_datas, dt)
             ---@type LabelData
@@ -122,12 +128,10 @@ function inlay_list_state:init(hint_list)
             }
             table.insert(self.label_raw_datas, lbdt)
         else
-            if i > 1 then
-                self.labels_width = self.labels_width + 1
-            end
             for _, part in ipairs(label) do
                 ---@type TextData
                 local dt = { col = self.labels_width, row = 0, virt_text = { part.value } }
+            api.nvim_buf_set_text(self.bufnr, 0, self.labels_width, 0, self.labels_width, { part.value })
 
                 self.labels_width = self.labels_width + #part.value
 
@@ -156,7 +160,6 @@ function inlay_list_state:init(hint_list)
     utils.min_width_height(win_opts, width, height)
 
     self.winnr = api.nvim_open_win(self.bufnr, true, win_opts)
-    api.nvim_buf_set_text(self.bufnr, 0, 0, 0, 0, { string.format("%" .. self.labels_width .. "s", " ") })
     api.nvim_win_set_cursor(self.winnr, { 1, 0 })
 
     api.nvim_create_autocmd({ "WinClosed" }, {

@@ -43,7 +43,6 @@ local inlay_list_state = {
 ---@param cur_data LabelData
 ---@param part lsp.InlayHintLabelPart
 function inlay_list_state:keymaps(cur_data, part)
-    vim.print(part.command)
     local client = lsp.get_clients({
         bufnr = cur_data.bufnr,
         client_id = cur_data.client_id,

@@ -63,7 +63,7 @@ M.hover = function(result, super_win, col)
         border = "rounded",
         relative = "win",
         row = 2,
-        col = col - 1,
+        col = math.min(col - 1, config.values.win_opts.width),
     })
     utils.min_width_height(win_opts, width, height)
 

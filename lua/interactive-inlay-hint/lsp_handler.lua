@@ -57,13 +57,16 @@ M.hover = function(result, super_win, col)
     local width = utils.max_width(markdown_lines)
     local height = #markdown_lines
 
+    ---@diagnostic disable-next-line: undefined-field
+    local leftcol = vim.fn.getwininfo(super_win)[1].leftcol
+
     ---@type vim.api.keyset.win_config
     local win_opts = vim.tbl_extend("keep", config.values.win_opts, {
         win = super_win,
         border = "rounded",
         relative = "win",
         row = 2,
-        col = math.min(col - 1, config.values.win_opts.width),
+        col = col - 1 - leftcol,
     })
     utils.min_width_height(win_opts, width, height)
 

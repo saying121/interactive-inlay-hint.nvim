@@ -18,12 +18,15 @@ function M:init(markdown_lines, super_win, col)
     local width = utils.max_width(markdown_lines)
     local height = #markdown_lines
 
+    ---@diagnostic disable-next-line: undefined-field
+    local leftcol = vim.fn.getwininfo(super_win)[1].leftcol
+
     local win_opts = vim.tbl_extend("keep", config.values.win_opts, {
         win = super_win,
         border = "rounded",
         relative = "win",
         row = 2,
-        col = col - 1,
+        col = col - 1 - leftcol,
         title = "tooltip",
         title_pos = "center",
     })

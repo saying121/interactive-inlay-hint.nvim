@@ -78,6 +78,7 @@ function inlay_list_state:handle_part()
         -- Make sure keymap only in the part that have location
         pcall(keymap_del, "n", value, { buffer = self.bufnr })
     end
+    api.nvim_win_set_config(self.winnr, { title = "" })
 
     local cur_data = self:cur_data()
     local part = cur_data.part
@@ -91,6 +92,7 @@ function inlay_list_state:handle_part()
 
         if part.location ~= nil then
             self:keymaps(cur_data, part)
+            api.nvim_win_set_config(self.winnr, { title = "⚡", title_pos = "center" })
         end
     end
 

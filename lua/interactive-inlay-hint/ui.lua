@@ -179,12 +179,35 @@ function inlay_list_state:init(hint_list)
     keymap("n", "q", function()
         self:close_hover()
     end, { buffer = self.bufnr, silent = true })
+
     keymap("n", "h", function()
         self:update(-1)
     end, { buffer = self.bufnr, silent = true })
     keymap("n", "l", function()
         self:update(1)
     end, { buffer = self.bufnr, silent = true })
+
+    for i = 1, #self.label_text_pos, 1 do
+        keymap("n", i .. "h", function()
+            self:update(-i)
+        end, { buffer = self.bufnr, silent = true })
+        keymap("n", i .. "l", function()
+            self:update(i)
+        end, { buffer = self.bufnr, silent = true })
+    end
+
+    local first_char = { "^", "g^", "g0", "0", "<Home>", "g<Home>" }
+    local last_char = { "$", "g$", "g_", "<End>", "g<End>" }
+    for _, value in ipairs(first_char) do
+        keymap("n", value, function()
+            self:update(-#self.label_text_pos)
+        end, { buffer = self.bufnr, silent = true })
+    end
+    for _, value in ipairs(last_char) do
+        keymap("n", value, function()
+            self:update(#self.label_text_pos)
+        end, { buffer = self.bufnr, silent = true })
+    end
 
     self:update(0)
 end

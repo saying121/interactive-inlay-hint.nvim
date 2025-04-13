@@ -16,6 +16,7 @@ local default = {
         hover = "K",
     },
     hover_hi = "LspReferenceText",
+    lsp_hint = "⚡",
     ---@type vim.api.keyset.win_config
     win_opts = {
         width = 80,

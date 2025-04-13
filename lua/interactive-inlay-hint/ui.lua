@@ -92,7 +92,7 @@ function inlay_list_state:handle_part()
 
         if part.location ~= nil then
             self:keymaps(cur_data, part)
-            api.nvim_win_set_config(self.winnr, { title = "⚡", title_pos = "center" })
+            api.nvim_win_set_config(self.winnr, { title = config.values.lsp_hint, title_pos = "center" })
         end
     end
 

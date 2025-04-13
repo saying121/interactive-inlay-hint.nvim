@@ -18,6 +18,7 @@ return {
                 hover = "K",
             },
             hover_hi = "LspReferenceText",
+            lsp_hint = "⚡",
             win_opts = {
                 width = 80,
                 height = 40,

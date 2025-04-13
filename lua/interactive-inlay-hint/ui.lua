@@ -1,3 +1,4 @@
+local max, min = math.max, math.min
 local api = vim.api
 local lsp = vim.lsp
 local methods = lsp.protocol.Methods
@@ -34,7 +35,7 @@ local inlay_list_state = {
     ---@type LabelData[]
     label_datas = {},
 
-    cur_inlay_idx = 0,
+    cur_inlay_idx = 1,
     ---@type integer
     ns_id = nil,
     ---@type integer[]
@@ -185,7 +186,7 @@ function inlay_list_state:init(hint_list)
         self:update(1)
     end, { buffer = self.bufnr, silent = true })
 
-    self:update(1)
+    self:update(0)
 end
 
 function inlay_list_state:close_hover()
@@ -202,19 +203,14 @@ function inlay_list_state:cur_text_pos()
     return self.label_text_pos[self.cur_inlay_idx]
 end
 
----@param direction -1|1
+---@param direction integer
 function inlay_list_state:update(direction)
-    if self.cur_inlay_idx == 0 then
-        direction = 1
+    if direction < 0 then
+        self.cur_inlay_idx = max(1, self.cur_inlay_idx + direction)
     else
-        if direction == -1 and self.cur_inlay_idx == 1 then
-            return
-        elseif direction == 1 and self.cur_inlay_idx == #self.label_text_pos then
-            return
-        end
+        self.cur_inlay_idx = min(#self.label_text_pos, self.cur_inlay_idx + direction)
     end
 
-    self.cur_inlay_idx = self.cur_inlay_idx + direction
     local cur_text = self:cur_text_pos()
     api.nvim_win_set_cursor(self.winnr, { 1, cur_text.col })
 
@@ -234,7 +230,7 @@ function inlay_list_state:clear()
     self.labels_width = 0
     self.label_datas = {}
 
-    self.cur_inlay_idx = 0
+    self.cur_inlay_idx = 1
     self.ns_id = nil
 end
 

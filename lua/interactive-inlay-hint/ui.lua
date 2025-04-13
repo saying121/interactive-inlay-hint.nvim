@@ -3,6 +3,7 @@ local lsp = vim.lsp
 local methods = lsp.protocol.Methods
 local lsp_util = lsp.util
 local keymap = vim.keymap.set
+local keymap_del = vim.keymap.del
 
 local utils = require("interactive-inlay-hint.utils")
 local tooltip = require("interactive-inlay-hint.tooltip")
@@ -75,7 +76,7 @@ function inlay_list_state:handle_part()
     for _, value in pairs(config.values.keymaps) do
         -- Del old keymap.
         -- Make sure keymap only in the part that have location
-        pcall(vim.keymap.del, value[1], value[2], { buffer = self.bufnr })
+        pcall(keymap_del, "n", value, { buffer = self.bufnr })
     end
 
     local cur_data = self:cur_data()

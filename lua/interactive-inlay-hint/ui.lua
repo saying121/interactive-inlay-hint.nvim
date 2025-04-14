@@ -186,7 +186,7 @@ function inlay_list_state:init(hint_list)
         self:update(1)
     end, { buffer = self.bufnr, silent = true })
 
-    for i = 1, #self.label_text_pos, 1 do
+    for i = 1, self:label_text_count(), 1 do
         keymap("n", i .. "h", function()
             self:update(-i)
         end, { buffer = self.bufnr, silent = true })
@@ -199,16 +199,21 @@ function inlay_list_state:init(hint_list)
     local last_char = { "$", "g$", "g_", "<End>", "g<End>" }
     for _, value in ipairs(first_char) do
         keymap("n", value, function()
-            self:update(-#self.label_text_pos)
+            self:update(-self:label_text_count())
         end, { buffer = self.bufnr, silent = true })
     end
     for _, value in ipairs(last_char) do
         keymap("n", value, function()
-            self:update(#self.label_text_pos)
+            self:update(self:label_text_count())
         end, { buffer = self.bufnr, silent = true })
     end
 
     self:update(0)
+end
+
+---@return integer
+function inlay_list_state:label_text_count()
+    return #self.label_text_pos
 end
 
 function inlay_list_state:close_hover()
@@ -228,8 +233,7 @@ end
 ---@param direction integer
 function inlay_list_state:update(direction)
     local new = self.cur_inlay_idx + direction
-    local max = #self.label_text_pos
-    self.cur_inlay_idx = new < 1 and 1 or new > max and max or new
+    self.cur_inlay_idx = new < 1 and 1 or new > self:label_text_count() and self:label_text_count() or new
 
     local cur_text = self:cur_text_pos()
     api.nvim_win_set_cursor(self.winnr, { 1, cur_text.col })

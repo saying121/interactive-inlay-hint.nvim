@@ -1,4 +1,3 @@
-local max, min = math.max, math.min
 local api = vim.api
 local lsp = vim.lsp
 local methods = lsp.protocol.Methods
@@ -228,11 +227,9 @@ end
 
 ---@param direction integer
 function inlay_list_state:update(direction)
-    if direction < 0 then
-        self.cur_inlay_idx = max(1, self.cur_inlay_idx + direction)
-    else
-        self.cur_inlay_idx = min(#self.label_text_pos, self.cur_inlay_idx + direction)
-    end
+    local new = self.cur_inlay_idx + direction
+    local max = #self.label_text_pos
+    self.cur_inlay_idx = new < 1 and 1 or new > max and max or new
 
     local cur_text = self:cur_text_pos()
     api.nvim_win_set_cursor(self.winnr, { 1, cur_text.col })

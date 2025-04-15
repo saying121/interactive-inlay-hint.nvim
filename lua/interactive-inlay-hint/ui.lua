@@ -175,24 +175,48 @@ function inlay_list_state:init(hint_list)
     })
     utils.set_win_buf_opt(self.winnr, self.bufnr)
 
+    local opts = { buffer = self.bufnr, silent = true }
+
     keymap("n", "q", function()
         self:close_hover()
-    end, { buffer = self.bufnr, silent = true })
+    end, opts)
 
-    keymap("n", "h", function()
-        self:update(-1)
-    end, { buffer = self.bufnr, silent = true })
-    keymap("n", "l", function()
-        self:update(1)
-    end, { buffer = self.bufnr, silent = true })
+    local word_end = { "e", "E" }
+    local back = { "ge", "gE" }
+    for _, value in ipairs(word_end) do
+        keymap("n", value, function()
+            local cur_pos = self:cur_text_pos()
+            api.nvim_win_set_cursor(self.winnr, { 1, cur_pos.end_col - 1 })
+        end, opts)
+    end
+    for _, value in ipairs(back) do
+        keymap("n", value, function()
+            local prev_pos = self:prev_text_pos()
+            self:update(-1)
+            api.nvim_win_set_cursor(self.winnr, { 1, prev_pos.end_col - 1 })
+        end, opts)
+    end
+
+    local right = { "l", "w", "W" }
+    local left = { "h", "b", "B" }
+    for _, value in ipairs(right) do
+        keymap("n", value, function()
+            self:update(1)
+        end, opts)
+    end
+    for _, value in ipairs(left) do
+        keymap("n", value, function()
+            self:update(-1)
+        end, opts)
+    end
 
     for i = 1, self:label_text_count(), 1 do
         keymap("n", i .. "h", function()
             self:update(-i)
-        end, { buffer = self.bufnr, silent = true })
+        end, opts)
         keymap("n", i .. "l", function()
             self:update(i)
-        end, { buffer = self.bufnr, silent = true })
+        end, opts)
     end
 
     local first_char = { "^", "g^", "g0", "0", "<Home>", "g<Home>" }
@@ -200,12 +224,12 @@ function inlay_list_state:init(hint_list)
     for _, value in ipairs(first_char) do
         keymap("n", value, function()
             self:update(-self:label_text_count())
-        end, { buffer = self.bufnr, silent = true })
+        end, opts)
     end
     for _, value in ipairs(last_char) do
         keymap("n", value, function()
             self:update(self:label_text_count())
-        end, { buffer = self.bufnr, silent = true })
+        end, opts)
     end
 
     self:update(0)
@@ -228,6 +252,11 @@ end
 ---@return TextPos
 function inlay_list_state:cur_text_pos()
     return self.label_text_pos[self.cur_inlay_idx]
+end
+
+---@return TextPos
+function inlay_list_state:prev_text_pos()
+    return self.label_text_pos[math.max(self.cur_inlay_idx - 1, 1)]
 end
 
 ---@param direction integer

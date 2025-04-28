@@ -24,6 +24,9 @@ local M = {}
 
 local inlay_list_state = {
     ---@type integer
+    super_bufnr = nil,
+
+    ---@type integer
     winnr = nil,
     ---@type integer
     bufnr = nil,
@@ -103,6 +106,11 @@ function inlay_list_state:handle_part()
         if part.location ~= nil then
             self:keymaps(cur_data, part)
             api.nvim_win_set_config(self.winnr, { title = config.values.lsp_hint, title_pos = "center" })
+
+            lsp.buf_request(self.super_bufnr, methods.textDocument_documentHighlight, {
+                textDocument = { uri = part.location.uri },
+                position = part.location.range.start,
+            })
         end
     end
 
@@ -119,6 +127,7 @@ end
 function inlay_list_state:init(hint_list)
     inlay_list_state:clear()
 
+    self.super_bufnr = api.nvim_get_current_buf()
     self.bufnr = api.nvim_create_buf(false, true)
 
     for i, value in ipairs(hint_list) do
@@ -286,6 +295,8 @@ function inlay_list_state:update(direction)
 end
 
 function inlay_list_state:clear()
+    self.super_bufnr = nil
+
     self.winnr = nil
     self.bufnr = nil
 
@@ -302,6 +313,7 @@ function inlay_list_state:refresh()
     for _, id in pairs(self.extmark_ids) do
         api.nvim_buf_del_extmark(self.bufnr, self.ns_id, id)
     end
+    lsp_util.buf_clear_references(self.super_bufnr)
     self.extmark_ids = {}
     for idx, vt in ipairs(self.label_text_pos) do
         if idx == self.cur_inlay_idx then

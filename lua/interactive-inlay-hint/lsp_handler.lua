@@ -69,6 +69,8 @@ M.hover = function(result, super_win, col)
         col = col - 1 - leftcol,
     })
     utils.min_width_height(win_opts, width, height)
+    -- Increase the width, it looks very thin
+    win_opts.width = win_opts.width + 5
 
     hover_state.winnr = api.nvim_open_win(hover_state.bufnr, false, win_opts)
 

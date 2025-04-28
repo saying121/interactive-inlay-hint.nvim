@@ -50,13 +50,23 @@ function inlay_list_state:keymaps(cur_data, part)
         method = methods.textDocument_inlayHint,
     })[1]
 
-    keymap("n", config.values.keymaps.goto_def, function()
-        client:request(methods.textDocument_definition, {
-            textDocument = { uri = part.location.uri },
-            position = part.location.range.start,
-        }, handler.goto_definition)
-        self:close_hover()
-    end, { buffer = self.bufnr })
+    local keys = config.values.keymaps
+    assert(keys ~= nil, "should have keymap")
+
+    local function lsp_map(lhs, method)
+        keymap("n", lhs, function()
+            client:request(method, {
+                textDocument = { uri = part.location.uri },
+                position = part.location.range.start,
+            }, handler.lsp_location)
+            self:close_hover()
+        end, { buffer = self.bufnr })
+    end
+
+    lsp_map(keys.declaration, methods.textDocument_declaration)
+    lsp_map(keys.definition, methods.textDocument_definition)
+    lsp_map(keys.typeDefinition, methods.textDocument_typeDefinition)
+    lsp_map(keys.implementation, methods.textDocument_implementation)
 
     keymap("n", config.values.keymaps.hover, function()
         if handler.hover_state.winnr ~= nil then

@@ -27,7 +27,7 @@ end
 local M = { hover_state = hover_state }
 
 ---@type lsp.Handler
-M.goto_definition = function(_, result, ctx)
+M.lsp_location = function(_, result, ctx)
     if result == nil or vim.tbl_isempty(result) then
         local _ = log.info() and log.info(ctx.method, "No location found")
         return nil

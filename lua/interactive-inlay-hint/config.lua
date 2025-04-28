@@ -1,5 +1,8 @@
 ---@class inter_inlay_keymaps
----@field goto_def? string
+---@field declaration? string
+---@field definition? string
+---@field typeDefinition? string
+---@field implementation? string
 ---@field hover? string
 
 ---@class inter_inlay_config
@@ -12,7 +15,10 @@ local M = {}
 ---@type inter_inlay_config
 local default = {
     keymaps = {
-        goto_def = "gd",
+        declaration = "gD",
+        definition = "gd",
+        typeDefinition = "gY",
+        implementation = "gI",
         hover = "K",
     },
     hover_hi = "LspReferenceText",

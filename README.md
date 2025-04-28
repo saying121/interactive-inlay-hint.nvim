@@ -14,7 +14,10 @@ return {
         local inter_inlay = require("interactive-inlay-hint")
         inter_inlay.setup({
             keymaps = {
-                goto_def = "gd",
+                declaration = "gD",
+                definition = "gd",
+                typeDefinition = "gY",
+                implementation = "gI",
                 hover = "K",
             },
             hover_hi = "LspReferenceText",

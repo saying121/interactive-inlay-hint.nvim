@@ -37,7 +37,10 @@ M.lsp_location = function(_, result, ctx)
         lsp_util.show_document(result[1], "utf-8", { focus = true })
 
         if #result > 1 then
-            vfn.setqflist(lsp_util.locations_to_items(result))
+            vfn.setqflist({}, " ", {
+                title = "LSP locations",
+                items = lsp_util.locations_to_items(result),
+            })
             api.nvim_command("copen")
             api.nvim_command("wincmd p")
         end

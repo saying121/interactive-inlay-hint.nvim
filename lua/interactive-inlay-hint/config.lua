@@ -17,7 +17,7 @@ local default = {
     keymaps = {
         declaration = "gD",
         definition = "gd",
-        typeDefinition = "gY",
+        typeDefinition = "gy",
         implementation = "gI",
         hover = "K",
     },

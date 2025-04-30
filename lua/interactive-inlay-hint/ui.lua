@@ -260,7 +260,7 @@ function inlay_list_state:label_text_count()
 end
 
 function inlay_list_state:close_hover()
-    api.nvim_win_close(self.winnr, true)
+    pcall(api.nvim_win_close, self.winnr, true)
 end
 
 ---@return LabelData

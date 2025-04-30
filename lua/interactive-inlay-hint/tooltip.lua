@@ -49,7 +49,7 @@ end
 
 function M:close_hover()
     if self.winnr ~= nil then
-        api.nvim_win_close(self.winnr, true)
+        pcall(api.nvim_win_close, self.winnr, true)
         self.winnr = nil
         self.bufnr = nil
     end

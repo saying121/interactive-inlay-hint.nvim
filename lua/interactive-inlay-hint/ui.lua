@@ -205,7 +205,14 @@ function inlay_list_state:init(hint_list)
     for _, value in ipairs(word_end) do
         keymap("n", value, function()
             local cur_pos = self:cur_text_pos()
-            api.nvim_win_set_cursor(self.winnr, { 1, cur_pos.end_col - 1 })
+            local cur_col = api.nvim_win_get_cursor(self.winnr)[2]
+            if cur_col == cur_pos.end_col - 1 then
+                self:update(1)
+                cur_pos = self:cur_text_pos()
+                api.nvim_win_set_cursor(self.winnr, { 1, cur_pos.end_col - 1 })
+            else
+                api.nvim_win_set_cursor(self.winnr, { 1, cur_pos.end_col - 1 })
+            end
         end, opts)
     end
     for _, value in ipairs(back) do

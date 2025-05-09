@@ -1,4 +1,4 @@
-local inlay_hint  = vim.lsp.inlay_hint
+local inlay_hint = vim.lsp.inlay_hint
 local utils = require("interactive-inlay-hint.utils")
 local ui = require("interactive-inlay-hint.ui")
 local config = require("interactive-inlay-hint.config")
@@ -16,12 +16,22 @@ M.exists_inlay_hint = function()
 end
 
 ---Return the inalyhint count
----@return integer
+---@return boolean
 M.interaction_inlay_hint = function()
     local hint_list = inlay_hint.get({ bufnr = 0, range = utils.select_word() })
+
+    local hint_count = #hint_list
+    if hint_count < 1 then
+        return false
+    end
+
+    if config.values.disable_when(hint_list) then
+        return false
+    end
+
     ui.float_ui(hint_list)
 
-    return #hint_list
+    return true
 end
 
 return M

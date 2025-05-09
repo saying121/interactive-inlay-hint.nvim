@@ -26,9 +26,12 @@ return {
                 width = 80,
                 height = 40,
             },
+            disable_when = function(_)
+                return false
+            end,
         })
         vim.keymap.set({ "n", "x" }, "K", function()
-            if inter_inlay.interaction_inlay_hint() == 0 then
+            if not inter_inlay.interaction_inlay_hint() then
                 vim.lsp.buf.hover({ border = "single" })
             end
             -- or

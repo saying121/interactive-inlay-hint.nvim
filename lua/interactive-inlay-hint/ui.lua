@@ -334,10 +334,6 @@ end
 
 ---@param hint_list vim.lsp.inlay_hint.get.ret[]
 M.float_ui = function(hint_list)
-    if #hint_list < 1 then
-        return
-    end
-
     inlay_list_state:init(hint_list)
 end
 

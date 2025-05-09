@@ -96,11 +96,9 @@ function inlay_list_state:handle_part()
     local cur_data = self:cur_data()
     local part = cur_data.part
 
-    ---@type string|lsp.MarkupContent
+    ---@type (string|lsp.MarkupContent)?
     local input
-    if type(part) == "string" then
-        input = part
-    else
+    if type(part) == "table" then
         input = part.tooltip
 
         if part.location ~= nil then
@@ -123,6 +121,7 @@ function inlay_list_state:handle_part()
     tooltip:init(markdown_lines, self.winnr, cur_text.col)
 end
 
+---Open hover window
 ---@param hint_list vim.lsp.inlay_hint.get.ret[]
 function inlay_list_state:init(hint_list)
     inlay_list_state:clear()

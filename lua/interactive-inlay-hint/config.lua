@@ -9,6 +9,7 @@
 ---@field keymaps? inter_inlay_keymaps
 ---@field hover_hi? string
 ---@field win_opts vim.api.keyset.win_config
+---Disable when return true
 ---@field disable_when? fun(hint_list: vim.lsp.inlay_hint.get.ret[]): boolean
 
 local M = {}

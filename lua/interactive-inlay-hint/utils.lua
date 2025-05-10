@@ -64,13 +64,14 @@ end
 
 ---@param winnr integer
 ---@param bufnr integer
-M.set_win_buf_opt = function(winnr, bufnr)
+---@param ft nil|string
+M.set_win_buf_opt = function(winnr, bufnr, ft)
     vim.wo[winnr].signcolumn = "no"
     vim.wo[winnr].number = false
     vim.wo[winnr].rnu = false
     vim.wo[winnr].sidescrolloff = 0
     vim.bo[bufnr].modifiable = false
-    vim.bo[bufnr].ft = "markdown"
+    vim.bo[bufnr].ft = ft or "markdown"
 end
 
 ---@param width integer

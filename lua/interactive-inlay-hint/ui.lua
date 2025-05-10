@@ -191,7 +191,7 @@ function inlay_list_state:init(hint_list)
             handler.hover_state:close_hover()
         end,
     })
-    utils.set_win_buf_opt(self.winnr, self.bufnr)
+    utils.set_win_buf_opt(self.winnr, self.bufnr, "inlay_hint_hover")
 
     local opts = { buffer = self.bufnr, silent = true }
 

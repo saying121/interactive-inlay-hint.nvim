@@ -57,11 +57,13 @@ function inlay_list_state:keymaps(cur_data, part)
     assert(keys ~= nil, "should have keymap")
 
     local function lsp_map(lhs, method)
+        local hd = lsp.handlers[method] or handler.lsp_location
+
         keymap("n", lhs, function()
             client:request(method, {
                 textDocument = { uri = part.location.uri },
                 position = part.location.range.start,
-            }, handler.lsp_location)
+            }, hd)
             self:close_hover()
         end, { buffer = self.bufnr })
     end

@@ -29,7 +29,7 @@ local M = { hover_state = hover_state }
 ---@type lsp.Handler
 M.lsp_location = function(_, result, ctx)
     local encoding = "utf-8"
-    local client = vim.lsp.get_client_by_id(ctx.client_id)
+    local client = lsp.get_client_by_id(ctx.client_id)
     if client then
         encoding = client.offset_encoding
     end
@@ -37,6 +37,8 @@ M.lsp_location = function(_, result, ctx)
         local _ = log.info() and log.info(ctx.method, "No location found")
         return nil
     end
+
+    vim.cmd.vsplit()
 
     if vim.islist(result) then
         lsp_util.show_document(result[1], encoding, { focus = true })
@@ -46,8 +48,7 @@ M.lsp_location = function(_, result, ctx)
                 title = "LSP locations",
                 items = lsp_util.locations_to_items(result, encoding),
             })
-            api.nvim_command("copen")
-            api.nvim_command("wincmd p")
+            vim.cmd("botright copen")
         end
     else
         lsp_util.show_document(result, encoding, { focus = true })

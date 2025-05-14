@@ -28,24 +28,29 @@ local M = { hover_state = hover_state }
 
 ---@type lsp.Handler
 M.lsp_location = function(_, result, ctx)
+    local encoding = "utf-8"
+    local client = vim.lsp.get_client_by_id(ctx.client_id)
+    if client then
+        encoding = client.offset_encoding
+    end
     if result == nil or vim.tbl_isempty(result) then
         local _ = log.info() and log.info(ctx.method, "No location found")
         return nil
     end
 
     if vim.islist(result) then
-        lsp_util.show_document(result[1], "utf-8", { focus = true })
+        lsp_util.show_document(result[1], encoding, { focus = true })
 
         if #result > 1 then
             vfn.setqflist({}, " ", {
                 title = "LSP locations",
-                items = lsp_util.locations_to_items(result),
+                items = lsp_util.locations_to_items(result, encoding),
             })
             api.nvim_command("copen")
             api.nvim_command("wincmd p")
         end
     else
-        lsp_util.show_document(result, "utf-8", { focus = true })
+        lsp_util.show_document(result, encoding, { focus = true })
     end
 end
 

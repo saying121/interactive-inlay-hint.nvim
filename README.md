@@ -51,6 +51,56 @@ return {
 }
 ```
 
+## Example of use your handler override the plugin's
+
+```lua
+local util = lsp.util
+local log = vim.lsp.log
+local lsp = vim.lsp
+local vfn = vim.fn
+local api = vim.api
+local methods = lsp.protocol.Methods
+
+local function get_locations(split_cmd)
+    ---@type lsp.Handler
+    local handler = function(_, result, ctx)
+        local encoding = "utf-8"
+        local client = lsp.get_client_by_id(ctx.client_id)
+        if client then
+            encoding = client.offset_encoding
+        end
+        if result == nil or vim.tbl_isempty(result) then
+            local _ = log.info() and log.info(ctx.method, "No location found")
+            return nil
+        end
+
+        if split_cmd then
+            vim.cmd(split_cmd)
+        end
+
+        if vim.islist(result) then
+            util.show_document(result[1], encoding, { focus = true })
+
+            if #result > 1 then
+                vfn.setqflist({}, " ", {
+                    title = "LSP locations",
+                    items = util.locations_to_items(result, encoding),
+                })
+                vim.cmd("botright copen")
+                api.nvim_command("wincmd p")
+            end
+        else
+            util.show_document(result, encoding, { focus = true })
+        end
+    end
+
+    return handler
+end
+
+lsp.handlers[methods.textDocument_definition] = get_locations("vsplit")
+lsp.handlers[methods.textDocument_implementation] = get_locations("vsplit")
+```
+
 ## Credits
 
 Inspired by [interactive-inlay.nvim](https://github.com/llllvvuu/interactive-inlay.nvim)

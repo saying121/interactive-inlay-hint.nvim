@@ -41,8 +41,11 @@ M.lsp_location = function(_, result, ctx)
     if not config.values.ui_select then
         vim.cmd.vsplit()
     end
-
-    if vim.islist(result) then
+    if not vim.islist(result) then
+        lsp_util.show_document(result, encoding, { focus = true })
+    elseif #result == 1 then
+        lsp_util.show_document(result[1], encoding, { focus = true })
+    else
         if config.values.ui_select then
             vim.ui.select(lsp_util.locations_to_items(result, encoding), {
                 prompt = "Lsp locations: ",
@@ -60,17 +63,12 @@ M.lsp_location = function(_, result, ctx)
             end)
             return
         end
-        lsp_util.show_document(result[1], encoding, { focus = true })
 
-        if #result > 1 then
-            vfn.setqflist({}, " ", {
-                title = "LSP locations",
-                items = lsp_util.locations_to_items(result, encoding),
-            })
-            vim.cmd("botright copen")
-        end
-    else
-        lsp_util.show_document(result, encoding, { focus = true })
+        vfn.setqflist({}, " ", {
+            title = "LSP locations",
+            items = lsp_util.locations_to_items(result, encoding),
+        })
+        vim.cmd("botright copen")
     end
 end
 

@@ -38,9 +38,28 @@ M.lsp_location = function(_, result, ctx)
         return nil
     end
 
-    vim.cmd.vsplit()
+    if not config.values.ui_select then
+        vim.cmd.vsplit()
+    end
 
     if vim.islist(result) then
+        if config.values.ui_select then
+            vim.ui.select(lsp_util.locations_to_items(result, encoding), {
+                prompt = "Lsp locations: ",
+                ---@param item vim.quickfix.entry
+                ---@return string
+                format_item = function(item)
+                    return item.text
+                end,
+            }, function(item, _)
+                if not item then
+                    return
+                end
+                vim.cmd("tabedit " .. item.filename)
+                api.nvim_win_set_cursor(0, { item.lnum, item.col - 1 })
+            end)
+            return
+        end
         lsp_util.show_document(result[1], encoding, { focus = true })
 
         if #result > 1 then

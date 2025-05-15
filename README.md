@@ -21,6 +21,7 @@ return {
                 hover = "K",
             },
             hover_hi = "LspReferenceText",
+            ui_select = true,
             lsp_hint = "⚡",
             win_opts = {
                 width = 80,

@@ -8,6 +8,7 @@
 ---@class inter_inlay_config
 ---@field keymaps? inter_inlay_keymaps
 ---@field hover_hi? string
+---@field ui_select? boolean
 ---@field win_opts vim.api.keyset.win_config
 ---Disable when return true
 ---@field disable_when? fun(hint_list: vim.lsp.inlay_hint.get.ret[]): boolean
@@ -24,6 +25,7 @@ local default = {
         hover = "K",
     },
     hover_hi = "LspReferenceText",
+    ui_select = false,
     lsp_hint = "⚡",
     ---@type vim.api.keyset.win_config
     win_opts = {

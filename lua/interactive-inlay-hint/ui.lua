@@ -224,8 +224,8 @@ function inlay_list_state:init(hint_list)
         end, opts)
     end
 
-    local right = { "l", "w", "W" }
-    local left = { "h", "b", "B" }
+    local right = { "l", "w", "W", "<Right>" }
+    local left = { "h", "b", "B", "<Left>" }
     for _, value in ipairs(right) do
         keymap("n", value, function()
             self:update(1)

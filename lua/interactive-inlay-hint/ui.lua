@@ -318,7 +318,7 @@ function inlay_list_state:clear()
     self.labels_width = 0
     self.label_datas = {}
 
-    self.cur_inlay_idx = 1
+    self.cur_inlay_idx = 0
     self.ns_id = nil
 end
 

@@ -293,6 +293,10 @@ function inlay_list_state:update(direction)
     local new = self.cur_inlay_idx + direction
     new = new < 1 and 1 or new > self:label_text_count() and self:label_text_count() or new
     if new == prev_idx then
+        -- update cursor
+        local cur_text = self:cur_text_pos()
+        api.nvim_win_set_cursor(self.winnr, { 1, cur_text.col })
+
         return
     end
     self.cur_inlay_idx = new

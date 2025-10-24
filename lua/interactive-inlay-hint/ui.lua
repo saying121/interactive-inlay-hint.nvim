@@ -19,7 +19,7 @@ local M = {}
 
 ---@class TextPos
 ---@field row integer
----@field col integer
+---@field start_col integer
 ---@field end_col integer
 
 local inlay_list_state = {
@@ -82,7 +82,7 @@ function inlay_list_state:keymaps(cur_data, part)
             textDocument = { uri = part.location.uri },
             position = part.location.range.start,
         }, function(_, result, _)
-            handler.hover(result, self.winnr, self:cur_text_pos().col)
+            handler.hover(result, self.winnr, self:cur_text_pos().start_col)
         end)
     end, { buffer = self.bufnr })
 end
@@ -120,7 +120,7 @@ function inlay_list_state:handle_part()
     local markdown_lines = lsp_util.convert_input_to_markdown_lines(input, {})
 
     local cur_text = self:cur_text_pos()
-    tooltip:init(markdown_lines, self.winnr, cur_text.col)
+    tooltip:init(markdown_lines, self.winnr, cur_text.start_col)
 end
 
 ---Open hover window
@@ -139,7 +139,7 @@ function inlay_list_state:init(hint_list)
         end
         if type(label) == "string" then
             ---@type TextPos
-            local dt = { col = self.labels_width, end_col = self.labels_width + #label, row = 0 }
+            local dt = { start_col = self.labels_width, end_col = self.labels_width + #label, row = 0 }
             api.nvim_buf_set_text(self.bufnr, 0, self.labels_width, 0, self.labels_width, { label })
 
             self.labels_width = self.labels_width + #label
@@ -154,7 +154,7 @@ function inlay_list_state:init(hint_list)
         else
             for _, part in ipairs(label) do
                 ---@type TextPos
-                local dt = { col = self.labels_width, end_col = self.labels_width + #part.value, row = 0 }
+                local dt = { start_col = self.labels_width, end_col = self.labels_width + #part.value, row = 0 }
                 api.nvim_buf_set_text(self.bufnr, 0, self.labels_width, 0, self.labels_width, { part.value })
 
                 self.labels_width = self.labels_width + #part.value
@@ -304,7 +304,7 @@ function inlay_list_state:update(direction)
         if new == 1 then
             -- update cursor to first
             local cur_text = self:cur_text_pos()
-            api.nvim_win_set_cursor(self.winnr, { 1, cur_text.col })
+            api.nvim_win_set_cursor(self.winnr, { 1, cur_text.start_col })
         end
 
         return
@@ -312,7 +312,7 @@ function inlay_list_state:update(direction)
     self.cur_inlay_idx = new
 
     local cur_text = self:cur_text_pos()
-    api.nvim_win_set_cursor(self.winnr, { 1, cur_text.col })
+    api.nvim_win_set_cursor(self.winnr, { 1, cur_text.start_col })
 
     self:refresh()
 
@@ -345,7 +345,7 @@ function inlay_list_state:refresh()
     self.extmark_ids = {}
     for idx, vt in ipairs(self.label_text_pos) do
         if idx == self.cur_inlay_idx then
-            local id = api.nvim_buf_set_extmark(self.bufnr, self.ns_id, 0, vt.col, {
+            local id = api.nvim_buf_set_extmark(self.bufnr, self.ns_id, 0, vt.start_col, {
                 end_col = vt.end_col,
                 hl_group = config.values.hover_hi,
             })

@@ -225,7 +225,7 @@ function inlay_list_state:init(hint_list)
     end
 
     local right = { "l", "w", "W", "<Right>" }
-    local left = { "h", "b", "B", "<Left>" }
+    local left = { "h", "<Left>" }
     for _, value in ipairs(right) do
         keymap("n", value, function()
             self:update(1)
@@ -234,6 +234,18 @@ function inlay_list_state:init(hint_list)
     for _, value in ipairs(left) do
         keymap("n", value, function()
             self:update(-1)
+        end, opts)
+    end
+    local b_left = { "b", "B" }
+    for _, value in ipairs(b_left) do
+        keymap("n", value, function()
+            local cur_pos = self:cur_text_pos()
+            local cur_col = api.nvim_win_get_cursor(self.winnr)[2]
+            if cur_col > cur_pos.start_col then
+                api.nvim_win_set_cursor(self.winnr, { 1, cur_pos.start_col })
+            else
+                self:update(-1)
+            end
         end, opts)
     end
 

@@ -17,7 +17,7 @@ local M = {}
 ---@field client_id integer
 ---@field part string|lsp.InlayHintLabelPart
 
----@class TextPos
+---@class TextRange
 ---@field row integer
 ---@field start_col integer
 ---@field end_col integer
@@ -31,7 +31,7 @@ local inlay_list_state = {
     ---@type integer
     bufnr = nil,
 
-    ---@type TextPos[]
+    ---@type TextRange[]
     label_text_pos = {},
     labels_width = 0,
     ---@type LabelData[]
@@ -138,7 +138,7 @@ function inlay_list_state:init(hint_list)
             self.labels_width = self.labels_width + 1
         end
         if type(label) == "string" then
-            ---@type TextPos
+            ---@type TextRange
             local dt = { start_col = self.labels_width, end_col = self.labels_width + #label, row = 0 }
             api.nvim_buf_set_text(self.bufnr, 0, self.labels_width, 0, self.labels_width, { label })
 
@@ -153,7 +153,7 @@ function inlay_list_state:init(hint_list)
             table.insert(self.label_datas, lbdt)
         else
             for _, part in ipairs(label) do
-                ---@type TextPos
+                ---@type TextRange
                 local dt = { start_col = self.labels_width, end_col = self.labels_width + #part.value, row = 0 }
                 api.nvim_buf_set_text(self.bufnr, 0, self.labels_width, 0, self.labels_width, { part.value })
 
@@ -283,12 +283,12 @@ function inlay_list_state:cur_data()
     return self.label_datas[self.cur_inlay_idx]
 end
 
----@return TextPos
+---@return TextRange
 function inlay_list_state:cur_text_pos()
     return self.label_text_pos[self.cur_inlay_idx]
 end
 
----@return TextPos
+---@return TextRange
 function inlay_list_state:prev_text_pos()
     return self.label_text_pos[math.max(self.cur_inlay_idx - 1, 1)]
 end

@@ -9,6 +9,11 @@ local keymap = vim.keymap.set
 local utils = require("interactive-inlay-hint.utils")
 local config = require("interactive-inlay-hint.config")
 
+---@class inter_inlay_location_item: vim.quickfix.entry
+---@field file string
+---@field pos [integer, integer]
+---@field end_pos? [integer, integer]
+
 local hover_state = {
     ---@type integer
     winnr = nil,
@@ -47,9 +52,39 @@ M.lsp_location = function(_, result, ctx)
         lsp_util.show_document(result[1], encoding, { focus = true })
     else
         if config.values.ui_select then
-            vim.ui.select(lsp_util.locations_to_items(result, encoding), {
+            local items = lsp_util.locations_to_items(result, encoding)
+            ---@cast items inter_inlay_location_item[]
+            for _, item in ipairs(items) do
+                -- Snacks' vim.ui.select implementation previews picker item fields
+                -- directly and does not currently call opts.preview_item.
+                item.file = item.filename
+                item.pos = { item.lnum, item.col - 1 }
+                if item.end_lnum and item.end_col then
+                    item.end_pos = { item.end_lnum, item.end_col - 1 }
+                end
+            end
+
+            vim.ui.select(items, {
+                ---@param item inter_inlay_location_item
+                preview_item = function(item)
+                    local location = item.user_data or {}
+                    local uri = location.uri or location.targetUri
+                    local bufnr = uri and vim.uri_to_bufnr(uri) or vfn.bufadd(item.filename)
+                    vfn.bufload(bufnr)
+
+                    ---@type {buf: integer, pos: [integer, integer], pos_end?: [integer, integer]}
+                    local preview = {
+                        buf = bufnr,
+                        pos = { item.lnum, item.col - 1 },
+                    }
+                    if item.end_lnum and item.end_col then
+                        preview.pos_end = { item.end_lnum, item.end_col - 1 }
+                    end
+                    ---@diagnostic disable-next-line: return-type-mismatch
+                    return preview
+                end,
                 prompt = "Lsp locations: ",
-                ---@param item vim.quickfix.entry
+                ---@param item inter_inlay_location_item
                 ---@return string
                 format_item = function(item)
                     return item.text

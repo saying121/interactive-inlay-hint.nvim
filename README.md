@@ -52,6 +52,28 @@ return {
 }
 ```
 
+## Recommended UI selector
+
+It is recommended to use `ui_select = true` together with
+[snacks.nvim](https://github.com/folke/snacks.nvim)'s `vim.ui.select`
+integration. When an LSP action returns multiple locations, Snacks provides a
+searchable list with source previews and highlights the selected location.
+
+The configuration above already enables `ui_select` for this plugin. Enable the
+Snacks picker and its `ui_select` integration as well:
+
+```lua
+{
+    "folke/snacks.nvim",
+    opts = {
+        picker = {
+            enabled = true,
+            ui_select = true,
+        },
+    },
+}
+```
+
 ## Example of use your handler override the plugin's
 
 ```lua
